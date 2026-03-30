@@ -53,13 +53,34 @@ func main() {
 		openAITemp   = flag.String("openai-temperature", "", "OpenAI sampling temperature for GPT translation (e.g. 0.2)")
 		debug        = flag.String("debug", "", "enable verbose debug logging (true/false)")
 		traceLogFile = flag.String("trace-log-file", "", "path to JSONL trace log file; if set, trace logging is enabled")
+		initConfig   = flag.Bool("init-config", false, "create default config.yaml and exit")
 	)
 	flag.Parse()
+
+	if *initConfig {
+		path, created, err := config.EnsureDefaultConfig(*configFile)
+		if err != nil {
+			log.Fatalf("init config: %v", err)
+		}
+		if created {
+			log.Printf("created default config: %s", path)
+		} else {
+			log.Printf("config already exists: %s", path)
+		}
+		return
+	}
 
 	// Service management commands (install / uninstall / start / stop)
 	if args := flag.Args(); len(args) > 0 {
 		runServiceCommand(args[0])
 		return
+	}
+
+	if path, created, err := config.EnsureDefaultConfig(*configFile); err != nil {
+		log.Printf("warning: could not create default config: %v", err)
+	} else if created {
+		log.Printf("created default config: %s", path)
+		log.Printf("edit API key settings in config.yaml and run again")
 	}
 
 	cfg, err := config.Load(

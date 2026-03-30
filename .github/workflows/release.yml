@@ -33,15 +33,21 @@ jobs:
           mkdir -p dist
           go build -trimpath -ldflags "-s -w" -o dist/wowschat-translator-windows-amd64.exe ./cmd/wowschat-translator/
 
+      - name: Package distributable files
+        run: |
+          cp config.yaml.example dist/config.yaml.example
+          cd dist
+          zip -9 wowschat-translator-windows-amd64.zip wowschat-translator-windows-amd64.exe config.yaml.example
+
       - name: Generate checksums
         run: |
           cd dist
-          sha256sum wowschat-translator-windows-amd64.exe > wowschat-translator-windows-amd64.exe.sha256
+          sha256sum wowschat-translator-windows-amd64.zip > wowschat-translator-windows-amd64.zip.sha256
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
           files: |
-            dist/wowschat-translator-windows-amd64.exe
-            dist/wowschat-translator-windows-amd64.exe.sha256
+            dist/wowschat-translator-windows-amd64.zip
+            dist/wowschat-translator-windows-amd64.zip.sha256

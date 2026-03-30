@@ -1,6 +1,7 @@
 package config
 
 import (
+	_ "embed"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -24,6 +25,57 @@ type Config struct {
 	OpenAITemperature float64           `yaml:"openai_temperature"`
 	Debug             bool              `yaml:"debug"`
 	TraceLogFile      string            `yaml:"trace_log_file"`
+}
+
+//go:embed default_config.yaml
+var embeddedDefaultConfigYAML string
+
+// EnsureDefaultConfig creates a default config file when it does not exist.
+// It returns the resolved path and whether a new file was created.
+func EnsureDefaultConfig(configFile string) (string, bool, error) {
+	path := resolveConfigPath(configFile)
+	if strings.TrimSpace(configFile) == "" {
+		path = defaultConfigPath()
+	}
+
+	if _, err := os.Stat(path); err == nil {
+		return path, false, nil
+	} else if !os.IsNotExist(err) {
+		return path, false, fmt.Errorf("stat %s: %w", path, err)
+	}
+
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return path, false, fmt.Errorf("create config dir %s: %w", filepath.Dir(path), err)
+	}
+
+	content := strings.TrimSpace(embeddedDefaultConfigYAML)
+	if content == "" {
+		return path, false, fmt.Errorf("embedded default config is empty")
+	}
+	content += "\n"
+
+	writeErr := os.WriteFile(path, []byte(content), 0o644)
+	if writeErr == nil {
+		return path, true, nil
+	}
+
+	if strings.TrimSpace(configFile) != "" {
+		return path, false, fmt.Errorf("write %s: %w", path, writeErr)
+	}
+
+	fallback := "config.yaml"
+	if filepath.Clean(fallback) == filepath.Clean(path) {
+		return path, false, fmt.Errorf("write %s: %w", path, writeErr)
+	}
+	if _, statErr := os.Stat(fallback); statErr == nil {
+		return fallback, false, nil
+	} else if !os.IsNotExist(statErr) {
+		return fallback, false, fmt.Errorf("stat %s: %w", fallback, statErr)
+	}
+	if writeErr := os.WriteFile(fallback, []byte(content), 0o644); writeErr != nil {
+		return path, false, fmt.Errorf("write %s: %w", path, writeErr)
+	}
+	return fallback, true, nil
 }
 
 // Load builds Config with priority: CLI args > env vars > config file > defaults.
@@ -149,11 +201,16 @@ func resolveConfigPath(explicit string) string {
 	if explicit != "" {
 		return explicit
 	}
+	candidate := defaultConfigPath()
+	if _, err := os.Stat(candidate); err == nil {
+		return candidate
+	}
+	return "config.yaml"
+}
+
+func defaultConfigPath() string {
 	if exe, err := os.Executable(); err == nil {
-		candidate := filepath.Join(filepath.Dir(exe), "config.yaml")
-		if _, err := os.Stat(candidate); err == nil {
-			return candidate
-		}
+		return filepath.Join(filepath.Dir(exe), "config.yaml")
 	}
 	return "config.yaml"
 }

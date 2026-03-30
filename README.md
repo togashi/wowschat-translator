@@ -46,7 +46,10 @@ and [WoWSChatTranslator](https://github.com/AndrewTaro/WoWSChatTranslator).
 
 ## Installation
 
-Download `wowschat-translator.exe` from [Releases](../../releases) and place it anywhere you like.
+Download the release package from [Releases](../../releases).
+
+- Recommended: `wowschat-translator-windows-amd64.zip` (includes exe and `config.yaml.example`)
+- Also available: standalone `wowschat-translator-windows-amd64.exe`
 
 ### Building from source
 
@@ -58,7 +61,16 @@ GOOS=windows GOARCH=amd64 go build -o wowschat-translator.exe ./cmd/wowschat-tra
 
 ### Config file (recommended)
 
-Create a `config.yaml` in the same directory as `wowschat-translator.exe`.
+If `config.yaml` is missing, the app auto-creates a default config file on startup.
+You can also generate it manually:
+
+```
+wowschat-translator.exe --init-config
+```
+
+The generated file is created next to the executable (or at `--config` path when provided).
+
+Minimal example:
 
 ```yaml
 api_key: "your-deepl-api-key"
@@ -66,8 +78,6 @@ target_lang: "JA"
 output_format: "({DetectedSourceLanguage}) {TranslatedText}"
 trace_log_file: "logs/trace.jsonl"
 ```
-
-You can copy `config.yaml.example` and edit it.
 
 `trace_log_file` is optional. If set, translator trace events are appended as JSON Lines.
 Relative paths are resolved from the runtime working directory.
