@@ -10,15 +10,17 @@ import (
 )
 
 type Config struct {
-	APIKey     string `yaml:"api_key"`
-	TargetLang string `yaml:"target_lang"`
+	APIKey       string `yaml:"api_key"`
+	TargetLang   string `yaml:"target_lang"`
+	OutputFormat string `yaml:"output_format"`
 }
 
 // Load builds Config with priority: CLI args > env vars > config file > defaults.
-// configFile, apiKey, targetLang are already-parsed CLI argument values (empty = not provided).
-func Load(configFile, apiKey, targetLang string) (*Config, error) {
+// configFile, apiKey, targetLang, outputFormat are already-parsed CLI argument values (empty = not provided).
+func Load(configFile, apiKey, targetLang, outputFormat string) (*Config, error) {
 	cfg := &Config{
-		TargetLang: "JA",
+		TargetLang:   "JA",
+		OutputFormat: "({DetectedSourceLanguage}) {TranslatedText}",
 	}
 
 	path := resolveConfigPath(configFile)
@@ -37,12 +39,18 @@ func Load(configFile, apiKey, targetLang string) (*Config, error) {
 	if v := os.Getenv("WOWSCHAT_TARGET_LANG"); v != "" {
 		cfg.TargetLang = v
 	}
+	if v := os.Getenv("WOWSCHAT_OUTPUT_FORMAT"); v != "" {
+		cfg.OutputFormat = v
+	}
 
 	if apiKey != "" {
 		cfg.APIKey = apiKey
 	}
 	if targetLang != "" {
 		cfg.TargetLang = targetLang
+	}
+	if outputFormat != "" {
+		cfg.OutputFormat = outputFormat
 	}
 
 	cfg.TargetLang = strings.ToUpper(cfg.TargetLang)

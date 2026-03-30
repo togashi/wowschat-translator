@@ -41,6 +41,7 @@ GOOS=windows GOARCH=amd64 go build -o wowschat.exe ./cmd/wowschat/
 ```yaml
 api_key: "your-deepl-api-key"
 target_lang: "JA"
+output_format: "({DetectedSourceLanguage}) {TranslatedText}"
 ```
 
 `config.yaml.example` をコピーして編集すると楽。
@@ -50,15 +51,36 @@ target_lang: "JA"
 ```
 WOWSCHAT_API_KEY=your-deepl-api-key
 WOWSCHAT_TARGET_LANG=JA
+WOWSCHAT_OUTPUT_FORMAT=({DetectedSourceLanguage}) {TranslatedText}
 ```
 
 ### コマンドライン引数
 
 ```
-wowschat.exe --api-key=your-deepl-api-key --target-lang=JA
+wowschat.exe --api-key=your-deepl-api-key --target-lang=JA --output-format="({DetectedSourceLanguage}) {TranslatedText}"
 ```
 
 **優先順位:** コマンドライン引数 > 環境変数 > 設定ファイル
+
+### 出力フォーマットタグ
+
+`output_format` で翻訳結果の出力形式をカスタマイズできる。
+`output_format` は省略可能で、省略した場合は WoWSChatTranslator 互換の出力形式になる。
+
+デフォルト値:
+
+```
+({DetectedSourceLanguage}) {TranslatedText}
+```
+
+使用可能なタグ:
+
+| タグ | 説明 |
+|------|------|
+| `{DetectedSourceLanguage}` | DeepL が検出した元言語（大文字化。例: `EN`） |
+| `{TargetLanguage}` | 指定した翻訳先言語（例: `JA`） |
+| `{SourceText}` | 元の入力テキスト |
+| `{TranslatedText}` | DeepL の翻訳結果テキスト |
 
 ### 翻訳先言語コード
 

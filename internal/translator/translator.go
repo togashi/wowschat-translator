@@ -13,6 +13,7 @@ type Translator struct {
 	apiKey     string
 	baseURL    string
 	httpClient *http.Client
+	outputFormat string
 }
 
 type translateRequest struct {
@@ -28,7 +29,7 @@ type translateResponse struct {
 }
 
 // New creates a Translator. API keys ending in ":fx" use the free-tier endpoint.
-func New(apiKey string) *Translator {
+func New(apiKey, outputFormat string) *Translator {
 	baseURL := "https://api.deepl.com"
 	if strings.HasSuffix(apiKey, ":fx") {
 		baseURL = "https://api-free.deepl.com"
@@ -36,6 +37,7 @@ func New(apiKey string) *Translator {
 	return &Translator{
 		apiKey:  apiKey,
 		baseURL: baseURL,
+		outputFormat: outputFormat,
 		httpClient: &http.Client{
 			Timeout: 10 * time.Second,
 		},
@@ -86,5 +88,10 @@ func (t *Translator) Translate(text, targetLang string) (string, error) {
 		return "", nil
 	}
 
-	return fmt.Sprintf("(%s) %s", strings.ToUpper(tr.DetectedSourceLanguage), tr.Text), nil
+	formatted := strings.ReplaceAll(t.outputFormat, "{DetectedSourceLanguage}", strings.ToUpper(tr.DetectedSourceLanguage))
+	formatted = strings.ReplaceAll(formatted, "{TargetLanguage}", targetLang)
+	formatted = strings.ReplaceAll(formatted, "{SourceText}", text)
+	formatted = strings.ReplaceAll(formatted, "{TranslatedText}", tr.Text)
+
+	return formatted, nil
 }

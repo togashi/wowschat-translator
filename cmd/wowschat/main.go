@@ -42,6 +42,7 @@ func main() {
 		configFile = flag.String("config", "", "path to config file (default: config.yaml next to executable)")
 		apiKey     = flag.String("api-key", "", "DeepL API key")
 		targetLang = flag.String("target-lang", "", "target language code (e.g. JA, EN-US)")
+		outputFmt  = flag.String("output-format", "", "translated output format (e.g. ({DetectedSourceLanguage}) {TranslatedText})")
 	)
 	flag.Parse()
 
@@ -51,7 +52,7 @@ func main() {
 		return
 	}
 
-	cfg, err := config.Load(*configFile, *apiKey, *targetLang)
+	cfg, err := config.Load(*configFile, *apiKey, *targetLang, *outputFmt)
 	if err != nil {
 		log.Fatalf("config: %v", err)
 	}
@@ -62,7 +63,7 @@ func main() {
 
 	log.Printf("target language: %s", cfg.TargetLang)
 
-	tr := translator.New(cfg.APIKey)
+	tr := translator.New(cfg.APIKey, cfg.OutputFormat)
 	srv := server.New(tr, cfg.TargetLang)
 	prg := &program{srv: srv}
 

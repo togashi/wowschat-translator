@@ -41,6 +41,7 @@ Create a `config.yaml` in the same directory as `wowschat.exe`.
 ```yaml
 api_key: "your-deepl-api-key"
 target_lang: "JA"
+output_format: "({DetectedSourceLanguage}) {TranslatedText}"
 ```
 
 You can copy `config.yaml.example` and edit it.
@@ -50,15 +51,36 @@ You can copy `config.yaml.example` and edit it.
 ```
 WOWSCHAT_API_KEY=your-deepl-api-key
 WOWSCHAT_TARGET_LANG=JA
+WOWSCHAT_OUTPUT_FORMAT=({DetectedSourceLanguage}) {TranslatedText}
 ```
 
 ### Command-line flags
 
 ```
-wowschat.exe --api-key=your-deepl-api-key --target-lang=JA
+wowschat.exe --api-key=your-deepl-api-key --target-lang=JA --output-format="({DetectedSourceLanguage}) {TranslatedText}"
 ```
 
 **Priority:** command-line flags > environment variables > config file
+
+### Output format tags
+
+You can customize translated output with `output_format`.
+`output_format` is optional; if omitted, output stays compatible with WoWSChatTranslator.
+
+Default:
+
+```
+({DetectedSourceLanguage}) {TranslatedText}
+```
+
+Available tags:
+
+| Tag | Description |
+|-----|-------------|
+| `{DetectedSourceLanguage}` | Source language detected by DeepL (uppercased, e.g. `EN`) |
+| `{TargetLanguage}` | Requested target language (e.g. `JA`) |
+| `{SourceText}` | Original input text |
+| `{TranslatedText}` | Translated text from DeepL |
 
 ### Target language codes
 
