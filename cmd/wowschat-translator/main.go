@@ -2,10 +2,13 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"log"
 	"os"
 	"os/signal"
+	"strings"
+	"sync"
 	"syscall"
 
 	"github.com/kardianos/service"
@@ -39,10 +42,16 @@ func (p *program) Stop(_ service.Service) error {
 
 func main() {
 	var (
-		configFile = flag.String("config", "", "path to config file (default: config.yaml next to executable)")
-		apiKey     = flag.String("api-key", "", "DeepL API key")
-		targetLang = flag.String("target-lang", "", "target language code (e.g. JA, EN-US)")
-		outputFmt  = flag.String("output-format", "", "translated output format (e.g. ({DetectedSourceLanguage}) {TranslatedText})")
+		configFile   = flag.String("config", "", "path to config file (default: config.yaml next to executable)")
+		apiKey       = flag.String("api-key", "", "DeepL API key")
+		targetLang   = flag.String("target-lang", "", "target language code (e.g. JA, EN-US)")
+		outputFmt    = flag.String("output-format", "", "translated output format (e.g. ({DetectedSourceLanguage}) {TranslatedText})")
+		engine       = flag.String("translation-engine", "", "translation engine: deepl or gpt")
+		openAIKey    = flag.String("openai-api-key", "", "OpenAI API key for GPT translation")
+		openAIModel  = flag.String("openai-model", "", "OpenAI model ID for GPT translation (e.g. gpt-5.4-mini)")
+		openAITemp   = flag.String("openai-temperature", "", "OpenAI sampling temperature for GPT translation (e.g. 0.2)")
+		debug        = flag.String("debug", "", "enable verbose debug logging (true/false)")
+		traceLogFile = flag.String("trace-log-file", "", "path to JSONL trace log file; if set, trace logging is enabled")
 	)
 	flag.Parse()
 
@@ -52,18 +61,77 @@ func main() {
 		return
 	}
 
-	cfg, err := config.Load(*configFile, *apiKey, *targetLang, *outputFmt)
+	cfg, err := config.Load(
+		*configFile,
+		*apiKey,
+		*targetLang,
+		*outputFmt,
+		*engine,
+		*openAIKey,
+		*openAIModel,
+		*openAITemp,
+		*debug,
+		*traceLogFile,
+	)
 	if err != nil {
 		log.Fatalf("config: %v", err)
 	}
-	if cfg.APIKey == "" {
-		log.Fatal("DeepL API key is required.\n" +
-			"  Set via --api-key flag, WOWSCHAT_API_KEY env var, or api_key in config.yaml")
+
+	var tr translator.Translator
+	switch strings.ToLower(cfg.TranslationEngine) {
+	case "deepl":
+		if cfg.DeepLAPIKey == "" {
+			log.Fatal("DeepL API key is required for translation_engine=deepl.\n" +
+				"  Set via --api-key flag, WOWSCHAT_API_KEY env var, or deepl_api_key (api_key fallback) in config.yaml")
+		}
+		tr = translator.NewDeepLTranslator(cfg.DeepLAPIKey, cfg.OutputFormat, cfg.Debug)
+	case "gpt":
+		if cfg.OpenAIAPIKey == "" {
+			log.Fatal("OpenAI API key is required for translation_engine=gpt.\n" +
+				"  Set via --openai-api-key flag, WOWSCHAT_OPENAI_API_KEY env var, or openai_api_key in config.yaml")
+		}
+		tr = translator.NewGPTTranslator(
+			cfg.OpenAIAPIKey,
+			cfg.OpenAIModel,
+			cfg.OpenAITemperature,
+			cfg.OutputFormat,
+			cfg.Passthrough,
+			cfg.Glossary,
+			cfg.Debug,
+		)
+	default:
+		log.Fatalf("unsupported translation_engine %q (valid: deepl, gpt)", cfg.TranslationEngine)
 	}
 
 	log.Printf("target language: %s", cfg.TargetLang)
+	log.Printf("translation engine: %s", cfg.TranslationEngine)
+	if cfg.Debug {
+		log.Printf("debug logging: enabled")
+	}
 
-	tr := translator.NewDeepLTranslator(cfg.APIKey, cfg.OutputFormat)
+	if cfg.TraceLogFile != "" {
+		traceFile, err := os.OpenFile(cfg.TraceLogFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
+		if err != nil {
+			log.Fatalf("trace log file: %v", err)
+		}
+		defer traceFile.Close()
+
+		encoder := json.NewEncoder(traceFile)
+		var mu sync.Mutex
+		if traceSinkSetter, ok := tr.(translator.TraceSinkSetter); ok {
+			traceSinkSetter.SetTraceSink(func(event translator.TranslatorTraceEvent) {
+				mu.Lock()
+				defer mu.Unlock()
+				if err := encoder.Encode(event); err != nil {
+					log.Printf("trace log write error: %v", err)
+				}
+			})
+			log.Printf("trace logging: %s", cfg.TraceLogFile)
+		} else {
+			log.Printf("trace logging not supported by selected translator")
+		}
+	}
+
 	srv := server.New(tr, cfg.TargetLang)
 	prg := &program{srv: srv}
 
