@@ -20,7 +20,13 @@ WoWs (TTaro Chat Mod)
 ## 必要なもの
 
 - [DeepL API キー](https://www.deepl.com/ja/pro-api)（無料プランで可）
-- [TTaro Chat Mod](https://github.com/TTaro/TTaroChat)
+- [TTaro Chat Mod](https://github.com/AndrewTaro/TTaroChat)
+
+## 謝辞
+
+[TTaroChat](https://github.com/AndrewTaro/TTaroChat) と
+[WoWSChatTranslator](https://github.com/AndrewTaro/WoWSChatTranslator) の作者である
+TTaro 氏に感謝します。
 
 ## インストール
 

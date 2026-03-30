@@ -20,7 +20,12 @@ WoWs (TTaro Chat Mod)
 ## Requirements
 
 - [DeepL API key](https://www.deepl.com/pro-api) (free plan is fine)
-- [TTaro Chat Mod](https://github.com/TTaro/TTaroChat)
+- [TTaro Chat Mod](https://github.com/AndrewTaro/TTaroChat)
+
+## Acknowledgements
+
+Special thanks to TTaro, the author of [TTaroChat](https://github.com/AndrewTaro/TTaroChat)
+and [WoWSChatTranslator](https://github.com/AndrewTaro/WoWSChatTranslator).
 
 ## Installation
 
