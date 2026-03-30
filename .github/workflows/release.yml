@@ -1,0 +1,47 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Run tests
+        run: go test ./...
+
+      - name: Build Windows binary
+        env:
+          CGO_ENABLED: "0"
+          GOOS: windows
+          GOARCH: amd64
+        run: |
+          mkdir -p dist
+          go build -trimpath -ldflags "-s -w" -o dist/wowschat-windows-amd64.exe ./cmd/wowschat/
+
+      - name: Generate checksums
+        run: |
+          cd dist
+          sha256sum wowschat-windows-amd64.exe > wowschat-windows-amd64.exe.sha256
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            dist/wowschat-windows-amd64.exe
+            dist/wowschat-windows-amd64.exe.sha256
