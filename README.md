@@ -1,114 +1,116 @@
 # wowschat
 
-World of Warships のゲーム内チャットを DeepL で翻訳するサービス。
-[WoWSChatTranslator](https://github.com/TTaro/WoWSChatTranslator) の GUI なし移植版。
+**[日本語](README.ja.md)**
 
-## 仕組み
+A service that translates in-game chat in World of Warships using DeepL.
+A headless port of [WoWSChatTranslator](https://github.com/AndrewTaro/WoWSChatTranslator).
 
-TTaro Chat Mod がチャットメッセージを `http://localhost:5000/wowschat/?text=...` へ送信し、
-wowschat がそれを DeepL API で翻訳してレスポンスとして返す。
+## How it works
+
+TTaro Chat Mod sends chat messages to `http://localhost:5000/wowschat/?text=...`,
+and wowschat translates them via the DeepL API and returns the result.
 
 ```
 WoWs (TTaro Chat Mod)
-  └─ GET http://localhost:5000/wowschat/?text=[メッセージ]
+  └─ GET http://localhost:5000/wowschat/?text=[message]
         └─ wowschat
               └─ DeepL API
 ```
 
-## 必要なもの
+## Requirements
 
-- [DeepL API キー](https://www.deepl.com/ja/pro-api)（無料プランで可）
+- [DeepL API key](https://www.deepl.com/pro-api) (free plan is fine)
 - [TTaro Chat Mod](https://github.com/TTaro/TTaroChat)
 
-## インストール
+## Installation
 
-[Releases](../../releases) から `wowschat.exe` をダウンロードして任意の場所に置く。
+Download `wowschat.exe` from [Releases](../../releases) and place it anywhere you like.
 
-### ビルドする場合
+### Building from source
 
 ```bash
 GOOS=windows GOARCH=amd64 go build -o wowschat.exe ./cmd/wowschat/
 ```
 
-## 設定
+## Configuration
 
-### 設定ファイル（推奨）
+### Config file (recommended)
 
-`wowschat.exe` と同じディレクトリに `config.yaml` を作成する。
+Create a `config.yaml` in the same directory as `wowschat.exe`.
 
 ```yaml
 api_key: "your-deepl-api-key"
 target_lang: "JA"
 ```
 
-`config.yaml.example` をコピーして編集すると楽。
+You can copy `config.yaml.example` and edit it.
 
-### 環境変数
+### Environment variables
 
 ```
 WOWSCHAT_API_KEY=your-deepl-api-key
 WOWSCHAT_TARGET_LANG=JA
 ```
 
-### コマンドライン引数
+### Command-line flags
 
 ```
 wowschat.exe --api-key=your-deepl-api-key --target-lang=JA
 ```
 
-**優先順位:** コマンドライン引数 > 環境変数 > 設定ファイル
+**Priority:** command-line flags > environment variables > config file
 
-### 翻訳先言語コード
+### Target language codes
 
-DeepL がサポートする言語コードを指定する（大文字小文字は問わない）。
+Specify a language code supported by DeepL (case-insensitive).
 
-| コード | 言語 |
-|--------|------|
-| `JA` | 日本語 |
-| `EN-US` | 英語（アメリカ） |
-| `EN-GB` | 英語（イギリス） |
-| `ZH-HANS` | 中国語（簡体字） |
-| `KO` | 韓国語 |
-| `DE` | ドイツ語 |
-| `FR` | フランス語 |
-| `RU` | ロシア語 |
+| Code | Language |
+|------|----------|
+| `JA` | Japanese |
+| `EN-US` | English (American) |
+| `EN-GB` | English (British) |
+| `ZH-HANS` | Chinese (Simplified) |
+| `KO` | Korean |
+| `DE` | German |
+| `FR` | French |
+| `RU` | Russian |
 
-全言語コードは [DeepL ドキュメント](https://developers.deepl.com/docs/resources/supported-languages) を参照。
+See the [DeepL documentation](https://developers.deepl.com/docs/resources/supported-languages) for all language codes.
 
-## 使い方
+## Usage
 
-### 通常起動（対話モード）
+### Interactive mode
 
 ```
 wowschat.exe
 ```
 
-設定ファイルが見つかれば自動で読み込まれ、すぐに翻訳を受け付け始める。
-停止するには `Ctrl+C`。
+If a config file is found, it is loaded automatically and translation starts immediately.
+Press `Ctrl+C` to stop.
 
-### Windows サービスとして動作させる
+### Running as a Windows service
 
-管理者権限のコマンドプロンプトで実行する。
+Run in an administrator command prompt.
 
 ```
-# サービス登録
+# Install the service
 wowschat.exe install
 
-# サービス開始
+# Start the service
 wowschat.exe start
 
-# サービス停止
+# Stop the service
 wowschat.exe stop
 
-# サービス削除
+# Uninstall the service
 wowschat.exe uninstall
 ```
 
-サービス登録後は Windows のサービス管理（`services.msc`）からも操作できる。
-サービスとして動作する場合、`config.yaml` は **exe と同じディレクトリ** に置く必要がある。
+Once installed, you can also manage it from Windows Services (`services.msc`).
+When running as a service, `config.yaml` must be in the **same directory as the exe**.
 
-## DeepL API キーについて
+## DeepL API key notes
 
-- 無料プランのキーは末尾が `:fx`（例: `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:fx`）
-- 末尾が `:fx` のキーは自動的に無料エンドポイント（`api-free.deepl.com`）を使用する
-- 有料プランのキーはそのまま指定すれば良い
+- Free plan keys end with `:fx` (e.g. `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:fx`)
+- Keys ending with `:fx` automatically use the free endpoint (`api-free.deepl.com`)
+- Pro plan keys work as-is
