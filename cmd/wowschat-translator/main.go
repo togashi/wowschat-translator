@@ -63,7 +63,7 @@ func main() {
 
 	log.Printf("target language: %s", cfg.TargetLang)
 
-	tr := translator.New(cfg.APIKey, cfg.OutputFormat)
+	tr := translator.NewDeepLTranslator(cfg.APIKey, cfg.OutputFormat)
 	srv := server.New(tr, cfg.TargetLang)
 	prg := &program{srv: srv}
 

@@ -11,12 +11,12 @@ import (
 const listenAddr = "127.0.0.1:5000"
 
 type Server struct {
-	tr         *translator.Translator
+	tr         translator.Translator
 	targetLang string
 	http       *http.Server
 }
 
-func New(tr *translator.Translator, targetLang string) *Server {
+func New(tr translator.Translator, targetLang string) *Server {
 	s := &Server{
 		tr:         tr,
 		targetLang: targetLang,
