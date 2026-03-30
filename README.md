@@ -5,6 +5,9 @@
 A service that translates in-game chat in World of Warships using DeepL.
 A headless port of [WoWSChatTranslator](https://github.com/AndrewTaro/WoWSChatTranslator).
 
+DeepL is the default and recommended engine.
+GPT translation is available as an advanced optional mode for users who understand prompt/model tuning and API cost trade-offs.
+
 ## How it works
 
 TTaro Chat Mod sends chat messages to `http://localhost:5000/wowschat/?text=...`,
@@ -90,6 +93,59 @@ Available tags:
 | `{TargetLanguage}` | Requested target language (e.g. `JA`) |
 | `{SourceText}` | Original input text |
 | `{TranslatedText}` | Translated text from DeepL |
+
+### Optional: GPT translation (advanced)
+
+`translation_engine: gpt` is intended for advanced users who want to tune model/prompt behavior.
+
+Notes:
+
+- You need your own OpenAI API key.
+- You are responsible for model/temperature tuning and API usage cost.
+- DeepL remains the safer default for simple, low-maintenance operation.
+
+Config file example:
+
+```yaml
+translation_engine: "gpt"
+openai_api_key: "your-openai-api-key"
+openai_model: "gpt-5.4-mini"
+openai_temperature: 0.2
+openai_prompt_file: "prompts/my_gpt_system_prompt.txt" # optional
+
+passthrough:
+      - gg
+      - regex:\b[A-Z]{2,}\b
+
+glossary:
+      AP: armor-piercing
+      DD: destroyer
+```
+
+Environment variables:
+
+```
+WOWSCHAT_TRANSLATION_ENGINE=gpt
+WOWSCHAT_OPENAI_API_KEY=your-openai-api-key
+WOWSCHAT_OPENAI_MODEL=gpt-5.4-mini
+WOWSCHAT_OPENAI_TEMPERATURE=0.2
+WOWSCHAT_OPENAI_PROMPT_FILE=prompts/my_gpt_system_prompt.txt
+```
+
+Command-line flags:
+
+```
+wowschat-translator.exe --translation-engine=gpt --openai-api-key=your-openai-api-key --openai-model=gpt-5.4-mini --openai-temperature=0.2 --openai-prompt-file=prompts/my_gpt_system_prompt.txt
+```
+
+Prompt placeholders (external prompt file only):
+
+- `{{PASSTHROUGH}}`
+- `{{GLOSSARY}}`
+
+If an external prompt file is loaded, these placeholders are replaced in-place.
+If placeholders are omitted in that external file, passthrough/glossary are not auto-appended.
+When no external prompt file is used (embedded default prompt), passthrough/glossary are appended automatically for backward compatibility.
 
 ### Target language codes
 

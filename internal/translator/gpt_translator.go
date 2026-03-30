@@ -2,27 +2,40 @@ package translator
 
 import (
 	"bytes"
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"regexp"
+	"sort"
 	"strings"
+	"sync"
 	"time"
 )
 
 type GPTTranslator struct {
-	apiKey       string
-	baseURL      string
-	model        string
-	temperature  float64
-	httpClient   *http.Client
-	outputFormat string
-	passthrough  []string
-	glossary     map[string]string
-	debug        bool
-	traceSink    func(TranslatorTraceEvent)
+	apiKey        string
+	baseURL       string
+	model         string
+	promptFile    string
+	temperature   float64
+	httpClient    *http.Client
+	outputFormat  string
+	passthrough   []string
+	glossary      map[string]string
+	debug         bool
+	traceSink     func(TranslatorTraceEvent)
+	promptMu      sync.RWMutex
+	promptCached  bool
+	promptValue   string
+	promptPath    string
+	promptModTime time.Time
+	rulesMu       sync.RWMutex
+	rulesCached   bool
+	rulesValue    []passthroughRule
 }
 
 type passthroughRule struct {
@@ -57,10 +70,16 @@ type openAIResponsesResponse struct {
 	} `json:"output"`
 }
 
+const (
+	promptPlaceholderPassthrough = "{{PASSTHROUGH}}"
+	promptPlaceholderGlossary    = "{{GLOSSARY}}"
+)
+
 // NewGPTTranslator creates a GPTTranslator.
 func NewGPTTranslator(
 	apiKey,
 	model string,
+	promptFile string,
 	temperature float64,
 	outputFormat string,
 	passthrough []string,
@@ -77,6 +96,7 @@ func NewGPTTranslator(
 		apiKey:       apiKey,
 		baseURL:      "https://api.openai.com/v1",
 		model:        model,
+		promptFile:   promptFile,
 		temperature:  temperature,
 		outputFormat: outputFormat,
 		passthrough:  passthrough,
@@ -93,23 +113,8 @@ func (t *GPTTranslator) SetTraceSink(sink func(TranslatorTraceEvent)) {
 	t.traceSink = sink
 }
 
-const gptTranslationSystemPrompt = `You are a translation helper for casual in-game chat.
-
-Translate into the target language when the meaning is clear and useful.
-
-Rules:
-- Assume the text is from a multiplayer game context
-- Keep common gaming slang unchanged (gg, wp, lol, afk, brb)
-- If the meaning is clear, translate even short phrases
-- Treat short commands and gameplay instructions as meaningful and translate them (e.g., "cap A", "push mid", "go B immediately")
-- If the text is ambiguous or unclear outside a game context, keep it unchanged
-
-Also detect the source language.
-
-Output JSON with:
-- text: final output text
-- source_lang: language code like "zh", "en", "ko", "id", "ja"
-- translation_note: optional note explaining translation choices (for debugging, not required)`
+//go:embed prompts/gpt_system_prompt.txt
+var embeddedGPTSystemPrompt string
 
 type gptTranslationResult struct {
 	Text            string `json:"text"`
@@ -133,9 +138,16 @@ func (t *GPTTranslator) Translate(text, targetLang string) (string, error) {
 
 	t.debugf("translate start model=%s temp=%.3f target=%s text_len=%d", t.model, t.temperature, targetLang, len(text))
 
-	rules := buildPassthroughRules(t.passthrough)
+	rules := t.getPassthroughRules()
 	maskedText, segments := applyPassthroughRules(text, rules)
 	t.debugf("passthrough rules=%d masked_segments=%d", len(rules), len(segments))
+	if isPassthroughOnlyMaskedText(maskedText) {
+		t.debugf("skip translation passthrough-only text")
+		t.trace("gpt", "skip", "passthrough-only text", map[string]any{
+			"masked_segments": len(segments),
+		})
+		return "", nil
+	}
 
 	reqBody := openAIResponsesRequest{
 		Model: t.model,
@@ -212,29 +224,196 @@ func (t *GPTTranslator) Translate(text, targetLang string) (string, error) {
 }
 
 func (t *GPTTranslator) buildSystemPrompt() string {
-	prompt := gptTranslationSystemPrompt
+	prompt := t.getSystemPrompt()
 
-	if len(t.passthrough) > 0 {
-		prompt += "\n\nPassthrough words/phrases (keep as-is):\n"
-		for _, s := range t.passthrough {
-			if strings.TrimSpace(s) == "" {
-				continue
-			}
-			prompt += "- " + s + "\n"
-		}
+	passthroughBlock := buildPassthroughPromptBlock(t.passthrough)
+	glossaryBlock := buildGlossaryPromptBlock(t.glossary)
+
+	hasPassthroughPlaceholder := strings.Contains(prompt, promptPlaceholderPassthrough)
+	hasGlossaryPlaceholder := strings.Contains(prompt, promptPlaceholderGlossary)
+
+	prompt = strings.ReplaceAll(prompt, promptPlaceholderPassthrough, passthroughBlock)
+	prompt = strings.ReplaceAll(prompt, promptPlaceholderGlossary, glossaryBlock)
+
+	if t.hasActiveExternalPrompt() {
+		return prompt
 	}
 
-	if len(t.glossary) > 0 {
-		prompt += "\nGlossary (source -> preferred target):\n"
-		for src, dst := range t.glossary {
-			if strings.TrimSpace(src) == "" || strings.TrimSpace(dst) == "" {
-				continue
-			}
-			prompt += "- " + src + " -> " + dst + "\n"
-		}
+	if passthroughBlock != "" && !hasPassthroughPlaceholder {
+		prompt += passthroughBlock
+	}
+
+	if glossaryBlock != "" && !hasGlossaryPlaceholder {
+		prompt += glossaryBlock
 	}
 
 	return prompt
+}
+
+func (t *GPTTranslator) hasActiveExternalPrompt() bool {
+	t.promptMu.RLock()
+	active := t.promptPath != ""
+	t.promptMu.RUnlock()
+	return active
+}
+
+func buildPassthroughPromptBlock(items []string) string {
+	if len(items) == 0 {
+		return ""
+	}
+
+	var b strings.Builder
+	b.WriteString("\n\nPassthrough words/phrases (keep as-is):\n")
+	count := 0
+	for _, s := range items {
+		if strings.TrimSpace(s) == "" {
+			continue
+		}
+		b.WriteString("- ")
+		b.WriteString(s)
+		b.WriteString("\n")
+		count++
+	}
+
+	if count == 0 {
+		return ""
+	}
+	return b.String()
+}
+
+func buildGlossaryPromptBlock(glossary map[string]string) string {
+	if len(glossary) == 0 {
+		return ""
+	}
+
+	keys := make([]string, 0, len(glossary))
+	for src := range glossary {
+		keys = append(keys, src)
+	}
+	sort.Strings(keys)
+
+	var b strings.Builder
+	b.WriteString("\nGlossary (source -> preferred target):\n")
+	count := 0
+	for _, src := range keys {
+		dst := glossary[src]
+		if strings.TrimSpace(src) == "" || strings.TrimSpace(dst) == "" {
+			continue
+		}
+		b.WriteString("- ")
+		b.WriteString(src)
+		b.WriteString(" -> ")
+		b.WriteString(dst)
+		b.WriteString("\n")
+		count++
+	}
+
+	if count == 0 {
+		return ""
+	}
+	return b.String()
+}
+
+func (t *GPTTranslator) getSystemPrompt() string {
+	defaultPrompt := strings.TrimSpace(embeddedGPTSystemPrompt)
+	if defaultPrompt == "" {
+		defaultPrompt = "You are a translation helper for casual in-game chat."
+	}
+
+	promptFile := strings.TrimSpace(t.promptFile)
+	if promptFile == "" {
+		t.promptMu.RLock()
+		if t.promptCached {
+			value := t.promptValue
+			t.promptMu.RUnlock()
+			return value
+		}
+		t.promptMu.RUnlock()
+
+		t.promptMu.Lock()
+		if !t.promptCached {
+			t.promptValue = defaultPrompt
+			t.promptCached = true
+			t.promptPath = ""
+			t.promptModTime = time.Time{}
+		}
+		value := t.promptValue
+		t.promptMu.Unlock()
+		return value
+	}
+
+	info, err := os.Stat(promptFile)
+	if err == nil && !info.IsDir() {
+		modTime := info.ModTime()
+
+		t.promptMu.RLock()
+		if t.promptCached && t.promptPath == promptFile && t.promptModTime.Equal(modTime) {
+			value := t.promptValue
+			t.promptMu.RUnlock()
+			return value
+		}
+		t.promptMu.RUnlock()
+
+		if data, readErr := os.ReadFile(promptFile); readErr == nil {
+			if loaded := strings.TrimSpace(string(data)); loaded != "" {
+				t.promptMu.Lock()
+				t.promptValue = loaded
+				t.promptCached = true
+				t.promptPath = promptFile
+				t.promptModTime = modTime
+				t.promptMu.Unlock()
+				t.debugf("loaded prompt file: %s", promptFile)
+				return loaded
+			}
+			t.debugf("prompt file is empty, using default: %s", promptFile)
+		} else {
+			t.debugf("prompt file load failed, using default: %s (%v)", promptFile, readErr)
+		}
+	} else if err != nil {
+		t.debugf("prompt file load failed, using default: %s (%v)", promptFile, err)
+	}
+
+	t.promptMu.RLock()
+	if t.promptCached {
+		value := t.promptValue
+		t.promptMu.RUnlock()
+		return value
+	}
+	t.promptMu.RUnlock()
+
+	t.promptMu.Lock()
+	if !t.promptCached {
+		t.promptValue = defaultPrompt
+		t.promptCached = true
+		t.promptPath = ""
+		t.promptModTime = time.Time{}
+	}
+	value := t.promptValue
+	t.promptMu.Unlock()
+
+	return value
+}
+
+func (t *GPTTranslator) getPassthroughRules() []passthroughRule {
+	t.rulesMu.RLock()
+	if t.rulesCached {
+		value := t.rulesValue
+		t.rulesMu.RUnlock()
+		return value
+	}
+	t.rulesMu.RUnlock()
+
+	rules := buildPassthroughRules(t.passthrough)
+
+	t.rulesMu.Lock()
+	if !t.rulesCached {
+		t.rulesValue = rules
+		t.rulesCached = true
+	}
+	value := t.rulesValue
+	t.rulesMu.Unlock()
+
+	return value
 }
 
 func extractResponsesOutputText(apiResp openAIResponsesResponse) string {
@@ -385,4 +564,14 @@ func restoreMaskedSegments(text string, segments []maskedSegment) string {
 		restored = strings.ReplaceAll(restored, segment.placeholder, segment.original)
 	}
 	return restored
+}
+
+var passthroughPlaceholderPattern = regexp.MustCompile(`__PT\d+__`)
+
+func isPassthroughOnlyMaskedText(maskedText string) bool {
+	if !strings.Contains(maskedText, "__PT") {
+		return false
+	}
+	remaining := passthroughPlaceholderPattern.ReplaceAllString(maskedText, "")
+	return strings.TrimSpace(remaining) == ""
 }

@@ -20,6 +20,7 @@ type Config struct {
 	TranslationEngine string            `yaml:"translation_engine"`
 	OpenAIAPIKey      string            `yaml:"openai_api_key"`
 	OpenAIModel       string            `yaml:"openai_model"`
+	OpenAIPromptFile  string            `yaml:"openai_prompt_file"`
 	OpenAITemperature float64           `yaml:"openai_temperature"`
 	Debug             bool              `yaml:"debug"`
 	TraceLogFile      string            `yaml:"trace_log_file"`
@@ -35,6 +36,7 @@ func Load(
 	translationEngine,
 	openAIAPIKey,
 	openAIModel,
+	openAIPromptFile,
 	openAITemperature,
 	debug,
 	traceLogFile string,
@@ -78,6 +80,9 @@ func Load(
 	if v := os.Getenv("WOWSCHAT_OPENAI_MODEL"); v != "" {
 		cfg.OpenAIModel = v
 	}
+	if v := os.Getenv("WOWSCHAT_OPENAI_PROMPT_FILE"); v != "" {
+		cfg.OpenAIPromptFile = v
+	}
 	if v := os.Getenv("WOWSCHAT_OPENAI_TEMPERATURE"); v != "" {
 		temperature, err := strconv.ParseFloat(v, 64)
 		if err != nil {
@@ -113,6 +118,9 @@ func Load(
 	}
 	if openAIModel != "" {
 		cfg.OpenAIModel = openAIModel
+	}
+	if openAIPromptFile != "" {
+		cfg.OpenAIPromptFile = openAIPromptFile
 	}
 	if openAITemperature != "" {
 		temperature, err := strconv.ParseFloat(openAITemperature, 64)

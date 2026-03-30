@@ -5,6 +5,9 @@
 World of Warships のゲーム内チャットを DeepL で翻訳するサービス。
 [WoWSChatTranslator](https://github.com/AndrewTaro/WoWSChatTranslator) の GUI なし移植版。
 
+既定・推奨エンジンは DeepL。
+GPT 翻訳は、プロンプトやモデル調整、API コスト管理を理解している人向けの任意オプション。
+
 ## 仕組み
 
 TTaro Chat Mod がチャットメッセージを `http://localhost:5000/wowschat/?text=...` へ送信し、
@@ -91,6 +94,59 @@ wowschat-translator.exe --api-key=your-deepl-api-key --target-lang=JA --output-f
 | `{TargetLanguage}` | 指定した翻訳先言語（例: `JA`） |
 | `{SourceText}` | 元の入力テキスト |
 | `{TranslatedText}` | DeepL の翻訳結果テキスト |
+
+### 任意機能: GPT 翻訳（上級者向け）
+
+`translation_engine: gpt` は、モデルやプロンプトを自分で調整したい上級者向けの設定。
+
+注意点:
+
+- OpenAI API キーが必要。
+- モデル/temperature の調整と API 利用コスト管理は利用者側の責任。
+- 手軽さと保守性を重視するなら DeepL のままが安全。
+
+設定ファイル例:
+
+```yaml
+translation_engine: "gpt"
+openai_api_key: "your-openai-api-key"
+openai_model: "gpt-5.4-mini"
+openai_temperature: 0.2
+openai_prompt_file: "prompts/my_gpt_system_prompt.txt" # 任意
+
+passthrough:
+      - gg
+      - regex:\b[A-Z]{2,}\b
+
+glossary:
+      AP: armor-piercing
+      DD: destroyer
+```
+
+環境変数:
+
+```
+WOWSCHAT_TRANSLATION_ENGINE=gpt
+WOWSCHAT_OPENAI_API_KEY=your-openai-api-key
+WOWSCHAT_OPENAI_MODEL=gpt-5.4-mini
+WOWSCHAT_OPENAI_TEMPERATURE=0.2
+WOWSCHAT_OPENAI_PROMPT_FILE=prompts/my_gpt_system_prompt.txt
+```
+
+コマンドライン引数:
+
+```
+wowschat-translator.exe --translation-engine=gpt --openai-api-key=your-openai-api-key --openai-model=gpt-5.4-mini --openai-temperature=0.2 --openai-prompt-file=prompts/my_gpt_system_prompt.txt
+```
+
+プロンプトプレースホルダー（外部プロンプトファイル指定時のみ有効）:
+
+- `{{PASSTHROUGH}}`
+- `{{GLOSSARY}}`
+
+外部プロンプトファイルを読み込んだ場合、これらのプレースホルダー位置に展開される。
+外部プロンプト内にプレースホルダーがない場合、passthrough/glossary は自動追記されない。
+外部プロンプトを使わず埋め込み既定プロンプトを使う場合は、後方互換のため自動追記される。
 
 ### 翻訳先言語コード
 

@@ -49,6 +49,7 @@ func main() {
 		engine       = flag.String("translation-engine", "", "translation engine: deepl or gpt")
 		openAIKey    = flag.String("openai-api-key", "", "OpenAI API key for GPT translation")
 		openAIModel  = flag.String("openai-model", "", "OpenAI model ID for GPT translation (e.g. gpt-5.4-mini)")
+		openAIPrompt = flag.String("openai-prompt-file", "", "optional file path for GPT system prompt override")
 		openAITemp   = flag.String("openai-temperature", "", "OpenAI sampling temperature for GPT translation (e.g. 0.2)")
 		debug        = flag.String("debug", "", "enable verbose debug logging (true/false)")
 		traceLogFile = flag.String("trace-log-file", "", "path to JSONL trace log file; if set, trace logging is enabled")
@@ -69,6 +70,7 @@ func main() {
 		*engine,
 		*openAIKey,
 		*openAIModel,
+		*openAIPrompt,
 		*openAITemp,
 		*debug,
 		*traceLogFile,
@@ -93,6 +95,7 @@ func main() {
 		tr = translator.NewGPTTranslator(
 			cfg.OpenAIAPIKey,
 			cfg.OpenAIModel,
+			cfg.OpenAIPromptFile,
 			cfg.OpenAITemperature,
 			cfg.OutputFormat,
 			cfg.Passthrough,

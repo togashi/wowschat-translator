@@ -9,8 +9,3 @@ trace_log_file: "logs/trace.jsonl" # relative path is resolved from runtime work
 passthrough:
   - gg
   - thx
-glossary:
-  dd: 駆逐艦
-  bb: 戦艦
-  ss: 潜水艦
-  cv: 空母
