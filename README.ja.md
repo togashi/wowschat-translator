@@ -2,28 +2,42 @@
 
 **[English](README.md)**
 
-World of Warships のゲーム内チャットを DeepL で翻訳するサービス。
+World of Warships のゲーム内チャットを翻訳するサービス。
 [WoWSChatTranslator](https://github.com/AndrewTaro/WoWSChatTranslator) の GUI なし移植版。
 
-既定・推奨エンジンは DeepL。
+本家にはない拡張機能として、GPT モードでは調整次第でより柔軟な翻訳挙動を実現できる。
 GPT 翻訳は、プロンプトやモデル調整、API コスト管理を理解している人向けの任意オプション。
+既定・推奨エンジンは本家と同じ DeepL。
+
+## ハイライト
+
+- DeepL を軸にした安定・シンプルな運用
+- 本家にはない任意機能としての GPT エンジンによるプロンプト駆動の調整
+- ゲーム用語向けの passthrough / glossary カスタマイズ
 
 ## 仕組み
 
 TTaro Chat Mod がチャットメッセージを `http://localhost:5000/wowschat/?text=...` へ送信し、
-wowschat-translator がそれを DeepL API で翻訳してレスポンスとして返す。
+wowschat-translator が選択されたエンジン（既定は DeepL、任意で GPT）で翻訳してレスポンスとして返す。
 
 ```
 WoWs (TTaro Chat Mod)
   └─ GET http://localhost:5000/wowschat/?text=[メッセージ]
         └─ wowschat-translator
-              └─ DeepL API
+              ├─ DeepL API（既定）
+              └─ OpenAI Responses API（任意: GPT）
 ```
 
 ## 必要なもの
 
+### 必須
+
 - [DeepL API キー](https://www.deepl.com/ja/pro-api)（無料プランで可）
 - [TTaro Chat Mod](https://github.com/AndrewTaro/TTaroChat)
+
+### 任意（GPT 翻訳を使う場合のみ）
+
+- [OpenAI API キー](https://platform.openai.com/api-keys)
 
 ## 謝辞
 
