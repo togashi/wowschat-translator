@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/leg3/wowschat/internal/translator"
+	"github.com/togashi/wowschat/internal/translator"
 )
 
 const listenAddr = "127.0.0.1:5000"

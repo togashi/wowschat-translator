@@ -9,9 +9,9 @@ import (
 	"syscall"
 
 	"github.com/kardianos/service"
-	"github.com/leg3/wowschat/internal/config"
-	"github.com/leg3/wowschat/internal/server"
-	"github.com/leg3/wowschat/internal/translator"
+	"github.com/togashi/wowschat/internal/config"
+	"github.com/togashi/wowschat/internal/server"
+	"github.com/togashi/wowschat/internal/translator"
 )
 
 var svcConfig = &service.Config{
