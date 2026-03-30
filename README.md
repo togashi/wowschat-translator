@@ -47,9 +47,13 @@ Create a `config.yaml` in the same directory as `wowschat-translator.exe`.
 api_key: "your-deepl-api-key"
 target_lang: "JA"
 output_format: "({DetectedSourceLanguage}) {TranslatedText}"
+trace_log_file: "logs/trace.jsonl"
 ```
 
 You can copy `config.yaml.example` and edit it.
+
+`trace_log_file` is optional. If set, translator trace events are appended as JSON Lines.
+Relative paths are resolved from the runtime working directory.
 
 ### Environment variables
 

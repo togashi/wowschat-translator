@@ -48,9 +48,13 @@ GOOS=windows GOARCH=amd64 go build -o wowschat-translator.exe ./cmd/wowschat-tra
 api_key: "your-deepl-api-key"
 target_lang: "JA"
 output_format: "({DetectedSourceLanguage}) {TranslatedText}"
+trace_log_file: "logs/trace.jsonl"
 ```
 
 `config.yaml.example` をコピーして編集すると楽。
+
+`trace_log_file` は任意項目。設定した場合は translator のトレースイベントを JSON Lines で追記する。
+相対パスは実行時のカレントディレクトリ基準で解決される。
 
 ### 環境変数
 
