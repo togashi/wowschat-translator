@@ -19,12 +19,16 @@ type Config struct {
 	Passthrough       []string          `yaml:"passthrough"`
 	Glossary          map[string]string `yaml:"glossary"`
 	TranslationEngine string            `yaml:"translation_engine"`
-	OpenAIAPIKey      string            `yaml:"openai_api_key"`
-	OpenAIModel       string            `yaml:"openai_model"`
-	OpenAIPromptFile  string            `yaml:"openai_prompt_file"`
-	OpenAITemperature float64           `yaml:"openai_temperature"`
-	Debug             bool              `yaml:"debug"`
-	TraceLogFile      string            `yaml:"trace_log_file"`
+	OpenAIAPIKey           string            `yaml:"openai_api_key"`
+	OpenAIModel            string            `yaml:"openai_model"`
+	OpenAIPromptFile       string            `yaml:"openai_prompt_file"`
+	OpenAITemperature      float64           `yaml:"openai_temperature"`
+	AnthropicAPIKey        string            `yaml:"anthropic_api_key"`
+	AnthropicModel         string            `yaml:"anthropic_model"`
+	AnthropicPromptFile    string            `yaml:"anthropic_prompt_file"`
+	AnthropicTemperature   float64           `yaml:"anthropic_temperature"`
+	Debug                  bool              `yaml:"debug"`
+	TraceLogFile           string            `yaml:"trace_log_file"`
 }
 
 //go:embed default_config.yaml
@@ -90,6 +94,10 @@ func Load(
 	openAIModel,
 	openAIPromptFile,
 	openAITemperature,
+	anthropicAPIKey,
+	anthropicModel,
+	anthropicPromptFile,
+	anthropicTemperature,
 	debug,
 	traceLogFile string,
 ) (*Config, error) {
@@ -97,8 +105,10 @@ func Load(
 		TargetLang:        "JA",
 		OutputFormat:      "({DetectedSourceLanguage}) {TranslatedText}",
 		TranslationEngine: "deepl",
-		OpenAIModel:       "gpt-5.4-mini",
-		OpenAITemperature: 0.2,
+		OpenAIModel:          "gpt-5.4-mini",
+		OpenAITemperature:    0.2,
+		AnthropicModel:       "claude-haiku-4-5-20251001",
+		AnthropicTemperature: 0.2,
 	}
 
 	path := resolveConfigPath(configFile)
@@ -142,6 +152,22 @@ func Load(
 		}
 		cfg.OpenAITemperature = temperature
 	}
+	if v := os.Getenv("WOWSCHAT_ANTHROPIC_API_KEY"); v != "" {
+		cfg.AnthropicAPIKey = v
+	}
+	if v := os.Getenv("WOWSCHAT_ANTHROPIC_MODEL"); v != "" {
+		cfg.AnthropicModel = v
+	}
+	if v := os.Getenv("WOWSCHAT_ANTHROPIC_PROMPT_FILE"); v != "" {
+		cfg.AnthropicPromptFile = v
+	}
+	if v := os.Getenv("WOWSCHAT_ANTHROPIC_TEMPERATURE"); v != "" {
+		temperature, err := strconv.ParseFloat(v, 64)
+		if err != nil {
+			return nil, fmt.Errorf("invalid WOWSCHAT_ANTHROPIC_TEMPERATURE %q: %w", v, err)
+		}
+		cfg.AnthropicTemperature = temperature
+	}
 	if v := os.Getenv("WOWSCHAT_DEBUG"); v != "" {
 		debugValue, err := strconv.ParseBool(v)
 		if err != nil {
@@ -180,6 +206,22 @@ func Load(
 			return nil, fmt.Errorf("invalid openai_temperature %q: %w", openAITemperature, err)
 		}
 		cfg.OpenAITemperature = temperature
+	}
+	if anthropicAPIKey != "" {
+		cfg.AnthropicAPIKey = anthropicAPIKey
+	}
+	if anthropicModel != "" {
+		cfg.AnthropicModel = anthropicModel
+	}
+	if anthropicPromptFile != "" {
+		cfg.AnthropicPromptFile = anthropicPromptFile
+	}
+	if anthropicTemperature != "" {
+		temperature, err := strconv.ParseFloat(anthropicTemperature, 64)
+		if err != nil {
+			return nil, fmt.Errorf("invalid anthropic_temperature %q: %w", anthropicTemperature, err)
+		}
+		cfg.AnthropicTemperature = temperature
 	}
 	if debug != "" {
 		debugValue, err := strconv.ParseBool(debug)

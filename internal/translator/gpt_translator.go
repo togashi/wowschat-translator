@@ -8,7 +8,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"regexp"
 	"sort"
 	"strings"
@@ -315,83 +314,16 @@ func buildGlossaryPromptBlock(glossary map[string]string) string {
 }
 
 func (t *GPTTranslator) getSystemPrompt() string {
-	defaultPrompt := strings.TrimSpace(embeddedGPTSystemPrompt)
-	if defaultPrompt == "" {
-		defaultPrompt = "You are a translation helper for casual in-game chat."
-	}
-
-	promptFile := strings.TrimSpace(t.promptFile)
-	if promptFile == "" {
-		t.promptMu.RLock()
-		if t.promptCached {
-			value := t.promptValue
-			t.promptMu.RUnlock()
-			return value
-		}
-		t.promptMu.RUnlock()
-
-		t.promptMu.Lock()
-		if !t.promptCached {
-			t.promptValue = defaultPrompt
-			t.promptCached = true
-			t.promptPath = ""
-			t.promptModTime = time.Time{}
-		}
-		value := t.promptValue
-		t.promptMu.Unlock()
-		return value
-	}
-
-	info, err := os.Stat(promptFile)
-	if err == nil && !info.IsDir() {
-		modTime := info.ModTime()
-
-		t.promptMu.RLock()
-		if t.promptCached && t.promptPath == promptFile && t.promptModTime.Equal(modTime) {
-			value := t.promptValue
-			t.promptMu.RUnlock()
-			return value
-		}
-		t.promptMu.RUnlock()
-
-		if data, readErr := os.ReadFile(promptFile); readErr == nil {
-			if loaded := strings.TrimSpace(string(data)); loaded != "" {
-				t.promptMu.Lock()
-				t.promptValue = loaded
-				t.promptCached = true
-				t.promptPath = promptFile
-				t.promptModTime = modTime
-				t.promptMu.Unlock()
-				t.debugf("loaded prompt file: %s", promptFile)
-				return loaded
-			}
-			t.debugf("prompt file is empty, using default: %s", promptFile)
-		} else {
-			t.debugf("prompt file load failed, using default: %s (%v)", promptFile, readErr)
-		}
-	} else if err != nil {
-		t.debugf("prompt file load failed, using default: %s (%v)", promptFile, err)
-	}
-
-	t.promptMu.RLock()
-	if t.promptCached {
-		value := t.promptValue
-		t.promptMu.RUnlock()
-		return value
-	}
-	t.promptMu.RUnlock()
-
-	t.promptMu.Lock()
-	if !t.promptCached {
-		t.promptValue = defaultPrompt
-		t.promptCached = true
-		t.promptPath = ""
-		t.promptModTime = time.Time{}
-	}
-	value := t.promptValue
-	t.promptMu.Unlock()
-
-	return value
+	return getSystemPromptFromFileOrDefault(
+		t.promptFile,
+		embeddedGPTSystemPrompt,
+		&t.promptMu,
+		&t.promptCached,
+		&t.promptValue,
+		&t.promptPath,
+		&t.promptModTime,
+		func(format string, args ...any) { t.debugf(format, args...) },
+	)
 }
 
 func (t *GPTTranslator) getPassthroughRules() []passthroughRule {

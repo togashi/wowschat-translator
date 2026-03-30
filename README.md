@@ -5,27 +5,28 @@
 A service that translates in-game chat in World of Warships.
 A headless port of [WoWSChatTranslator](https://github.com/AndrewTaro/WoWSChatTranslator).
 
-As an optional extension not present in the original project, GPT mode enables more customizable translation behavior when tuned carefully.
-GPT translation is available as an advanced optional mode for users who understand prompt/model tuning and API cost trade-offs.
+As an optional extension not present in the original project, GPT and Claude modes enable more customizable translation behavior when tuned carefully.
+GPT and Claude translation are available as advanced optional modes for users who understand prompt/model tuning and API cost trade-offs.
 The default and recommended engine remains DeepL, same as the original project.
 
 ## Highlights
 
 - DeepL-first operation for stable and simple setup
-- Optional GPT engine (not in the original project) for prompt-driven customization
+- Optional GPT / Claude engines (not in the original project) for prompt-driven customization
 - Configurable passthrough/glossary controls for game-specific terms
 
 ## How it works
 
 TTaro Chat Mod sends chat messages to `http://localhost:5000/wowschat/?text=...`,
-and wowschat-translator translates them with the selected engine (DeepL by default, GPT optional) and returns the result.
+and wowschat-translator translates them with the selected engine (DeepL by default, GPT/Claude optional) and returns the result.
 
 ```
 WoWs (TTaro Chat Mod)
   └─ GET http://localhost:5000/wowschat/?text=[message]
         └─ wowschat-translator
               ├─ DeepL API (default)
-              └─ OpenAI Responses API (optional GPT)
+              ├─ OpenAI Responses API (optional GPT)
+              └─ Anthropic Messages API (optional Claude)
 ```
 
 ## Requirements
@@ -35,9 +36,10 @@ WoWs (TTaro Chat Mod)
 - [DeepL API key](https://www.deepl.com/pro-api) (free plan is fine)
 - [TTaro Chat Mod](https://github.com/AndrewTaro/TTaroChat)
 
-### Optional (only when using GPT translation)
+### Optional (only when using GPT or Claude translation)
 
-- [OpenAI API key](https://platform.openai.com/api-keys)
+- [OpenAI API key](https://platform.openai.com/api-keys) (GPT)
+- [Anthropic API key](https://console.anthropic.com/settings/keys) (Claude)
 
 ## Acknowledgements
 
@@ -170,6 +172,52 @@ Prompt placeholders (external prompt file only):
 If an external prompt file is loaded, these placeholders are replaced in-place.
 If placeholders are omitted in that external file, passthrough/glossary are not auto-appended.
 When no external prompt file is used (embedded default prompt), passthrough/glossary are appended automatically for backward compatibility.
+
+### Optional: Claude translation (advanced)
+
+`translation_engine: claude` is intended for advanced users who want to tune model/prompt behavior using Anthropic's Claude.
+
+Notes:
+
+- You need your own Anthropic API key.
+- You are responsible for model/temperature tuning and API usage cost.
+- DeepL remains the safer default for simple, low-maintenance operation.
+
+Config file example:
+
+```yaml
+translation_engine: "claude"
+anthropic_api_key: "your-anthropic-api-key"
+anthropic_model: "claude-haiku-4-5-20251001"
+anthropic_temperature: 0.2
+anthropic_prompt_file: "prompts/my_claude_system_prompt.txt" # optional
+
+passthrough:
+      - gg
+      - regex:\b[A-Z]{2,}\b
+
+glossary:
+      AP: armor-piercing
+      DD: destroyer
+```
+
+Environment variables:
+
+```
+WOWSCHAT_TRANSLATION_ENGINE=claude
+WOWSCHAT_ANTHROPIC_API_KEY=your-anthropic-api-key
+WOWSCHAT_ANTHROPIC_MODEL=claude-haiku-4-5-20251001
+WOWSCHAT_ANTHROPIC_TEMPERATURE=0.2
+WOWSCHAT_ANTHROPIC_PROMPT_FILE=prompts/my_claude_system_prompt.txt
+```
+
+Command-line flags:
+
+```
+wowschat-translator.exe --translation-engine=claude --anthropic-api-key=your-anthropic-api-key --anthropic-model=claude-haiku-4-5-20251001 --anthropic-temperature=0.2 --anthropic-prompt-file=prompts/my_claude_system_prompt.txt
+```
+
+Prompt placeholders work the same as GPT mode (`{{PASSTHROUGH}}`, `{{GLOSSARY}}`).
 
 ### Target language codes
 

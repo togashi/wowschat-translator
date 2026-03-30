@@ -18,9 +18,9 @@ import (
 )
 
 var svcConfig = &service.Config{
-	Name:        "WoWSChatTranslator",
-	DisplayName: "WoWS Chat Translator",
-	Description: "World of Warships in-game chat translation service via DeepL",
+	Name:        "WoWSChatTranslatorService",
+	DisplayName: "WoWS Chat Translator Service",
+	Description: "World of Warships in-game chat translation service",
 }
 
 type program struct {
@@ -46,12 +46,16 @@ func main() {
 		apiKey       = flag.String("api-key", "", "DeepL API key")
 		targetLang   = flag.String("target-lang", "", "target language code (e.g. JA, EN-US)")
 		outputFmt    = flag.String("output-format", "", "translated output format (e.g. ({DetectedSourceLanguage}) {TranslatedText})")
-		engine       = flag.String("translation-engine", "", "translation engine: deepl or gpt")
-		openAIKey    = flag.String("openai-api-key", "", "OpenAI API key for GPT translation")
-		openAIModel  = flag.String("openai-model", "", "OpenAI model ID for GPT translation (e.g. gpt-5.4-mini)")
-		openAIPrompt = flag.String("openai-prompt-file", "", "optional file path for GPT system prompt override")
-		openAITemp   = flag.String("openai-temperature", "", "OpenAI sampling temperature for GPT translation (e.g. 0.2)")
-		debug        = flag.String("debug", "", "enable verbose debug logging (true/false)")
+		engine          = flag.String("translation-engine", "", "translation engine: deepl, gpt, or claude")
+		openAIKey       = flag.String("openai-api-key", "", "OpenAI API key for GPT translation")
+		openAIModel     = flag.String("openai-model", "", "OpenAI model ID for GPT translation (e.g. gpt-5.4-mini)")
+		openAIPrompt    = flag.String("openai-prompt-file", "", "optional file path for GPT system prompt override")
+		openAITemp      = flag.String("openai-temperature", "", "OpenAI sampling temperature for GPT translation (e.g. 0.2)")
+		anthropicKey    = flag.String("anthropic-api-key", "", "Anthropic API key for Claude translation")
+		anthropicModel  = flag.String("anthropic-model", "", "Anthropic model ID for Claude translation (e.g. claude-haiku-4-5-20251001)")
+		anthropicPrompt = flag.String("anthropic-prompt-file", "", "optional file path for Claude system prompt override")
+		anthropicTemp   = flag.String("anthropic-temperature", "", "Anthropic sampling temperature for Claude translation (e.g. 0.2)")
+		debug           = flag.String("debug", "", "enable verbose debug logging (true/false)")
 		traceLogFile = flag.String("trace-log-file", "", "path to JSONL trace log file; if set, trace logging is enabled")
 		initConfig   = flag.Bool("init-config", false, "create default config.yaml and exit")
 	)
@@ -93,6 +97,10 @@ func main() {
 		*openAIModel,
 		*openAIPrompt,
 		*openAITemp,
+		*anthropicKey,
+		*anthropicModel,
+		*anthropicPrompt,
+		*anthropicTemp,
 		*debug,
 		*traceLogFile,
 	)
@@ -123,8 +131,23 @@ func main() {
 			cfg.Glossary,
 			cfg.Debug,
 		)
+	case "claude":
+		if cfg.AnthropicAPIKey == "" {
+			log.Fatal("Anthropic API key is required for translation_engine=claude.\n" +
+				"  Set via --anthropic-api-key flag, WOWSCHAT_ANTHROPIC_API_KEY env var, or anthropic_api_key in config.yaml")
+		}
+		tr = translator.NewClaudeTranslator(
+			cfg.AnthropicAPIKey,
+			cfg.AnthropicModel,
+			cfg.AnthropicPromptFile,
+			cfg.AnthropicTemperature,
+			cfg.OutputFormat,
+			cfg.Passthrough,
+			cfg.Glossary,
+			cfg.Debug,
+		)
 	default:
-		log.Fatalf("unsupported translation_engine %q (valid: deepl, gpt)", cfg.TranslationEngine)
+		log.Fatalf("unsupported translation_engine %q (valid: deepl, gpt, claude)", cfg.TranslationEngine)
 	}
 
 	log.Printf("target language: %s", cfg.TargetLang)
