@@ -9,13 +9,13 @@ import (
 	"syscall"
 
 	"github.com/kardianos/service"
-	"github.com/togashi/wowschat/internal/config"
-	"github.com/togashi/wowschat/internal/server"
-	"github.com/togashi/wowschat/internal/translator"
+	"github.com/togashi/wowschat-translator/internal/config"
+	"github.com/togashi/wowschat-translator/internal/server"
+	"github.com/togashi/wowschat-translator/internal/translator"
 )
 
 var svcConfig = &service.Config{
-	Name:        "WoWSChat",
+	Name:        "WoWSChatTranslator",
 	DisplayName: "WoWS Chat Translator",
 	Description: "World of Warships in-game chat translation service via DeepL",
 }

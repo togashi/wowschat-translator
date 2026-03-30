@@ -1,4 +1,4 @@
-module github.com/togashi/wowschat
+module github.com/togashi/wowschat-translator
 
 go 1.25.6
 

@@ -31,17 +31,17 @@ jobs:
           GOARCH: amd64
         run: |
           mkdir -p dist
-          go build -trimpath -ldflags "-s -w" -o dist/wowschat-windows-amd64.exe ./cmd/wowschat/
+          go build -trimpath -ldflags "-s -w" -o dist/wowschat-translator-windows-amd64.exe ./cmd/wowschat-translator/
 
       - name: Generate checksums
         run: |
           cd dist
-          sha256sum wowschat-windows-amd64.exe > wowschat-windows-amd64.exe.sha256
+          sha256sum wowschat-translator-windows-amd64.exe > wowschat-translator-windows-amd64.exe.sha256
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
           files: |
-            dist/wowschat-windows-amd64.exe
-            dist/wowschat-windows-amd64.exe.sha256
+            dist/wowschat-translator-windows-amd64.exe
+            dist/wowschat-translator-windows-amd64.exe.sha256

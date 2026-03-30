@@ -1,4 +1,4 @@
-# wowschat
+# wowschat-translator
 
 **[日本語](README.ja.md)**
 
@@ -8,12 +8,12 @@ A headless port of [WoWSChatTranslator](https://github.com/AndrewTaro/WoWSChatTr
 ## How it works
 
 TTaro Chat Mod sends chat messages to `http://localhost:5000/wowschat/?text=...`,
-and wowschat translates them via the DeepL API and returns the result.
+and wowschat-translator translates them via the DeepL API and returns the result.
 
 ```
 WoWs (TTaro Chat Mod)
   └─ GET http://localhost:5000/wowschat/?text=[message]
-        └─ wowschat
+        └─ wowschat-translator
               └─ DeepL API
 ```
 
@@ -29,19 +29,19 @@ and [WoWSChatTranslator](https://github.com/AndrewTaro/WoWSChatTranslator).
 
 ## Installation
 
-Download `wowschat.exe` from [Releases](../../releases) and place it anywhere you like.
+Download `wowschat-translator.exe` from [Releases](../../releases) and place it anywhere you like.
 
 ### Building from source
 
 ```bash
-GOOS=windows GOARCH=amd64 go build -o wowschat.exe ./cmd/wowschat/
+GOOS=windows GOARCH=amd64 go build -o wowschat-translator.exe ./cmd/wowschat-translator/
 ```
 
 ## Configuration
 
 ### Config file (recommended)
 
-Create a `config.yaml` in the same directory as `wowschat.exe`.
+Create a `config.yaml` in the same directory as `wowschat-translator.exe`.
 
 ```yaml
 api_key: "your-deepl-api-key"
@@ -62,7 +62,7 @@ WOWSCHAT_OUTPUT_FORMAT=({DetectedSourceLanguage}) {TranslatedText}
 ### Command-line flags
 
 ```
-wowschat.exe --api-key=your-deepl-api-key --target-lang=JA --output-format="({DetectedSourceLanguage}) {TranslatedText}"
+wowschat-translator.exe --api-key=your-deepl-api-key --target-lang=JA --output-format="({DetectedSourceLanguage}) {TranslatedText}"
 ```
 
 **Priority:** command-line flags > environment variables > config file
@@ -109,7 +109,7 @@ See the [DeepL documentation](https://developers.deepl.com/docs/resources/suppor
 ### Interactive mode
 
 ```
-wowschat.exe
+wowschat-translator.exe
 ```
 
 If a config file is found, it is loaded automatically and translation starts immediately.
@@ -121,16 +121,16 @@ Run in an administrator command prompt.
 
 ```
 # Install the service
-wowschat.exe install
+wowschat-translator.exe install
 
 # Start the service
-wowschat.exe start
+wowschat-translator.exe start
 
 # Stop the service
-wowschat.exe stop
+wowschat-translator.exe stop
 
 # Uninstall the service
-wowschat.exe uninstall
+wowschat-translator.exe uninstall
 ```
 
 Once installed, you can also manage it from Windows Services (`services.msc`).
