@@ -8,6 +8,13 @@ deepl_api_key: "your-deepl-api-key-here"
 # anthropic_model: "claude-haiku-4-5-20251001"
 # trace_log_file: "logs/trace.jsonl" # relative path is resolved from runtime working directory
 # output_format: "({DetectedSourceLanguage}) {TranslatedText}"
+
 passthrough:
   - gg
   - thx
+  - np
+
+expand:
+  cap: capture
+  torp: torpedo
+  torps: torpedoes

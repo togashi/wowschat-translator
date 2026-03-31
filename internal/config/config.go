@@ -18,6 +18,7 @@ type Config struct {
 	OutputFormat      string            `yaml:"output_format"`
 	Passthrough       []string          `yaml:"passthrough"`
 	Glossary          map[string]string `yaml:"glossary"`
+	Expand            map[string]string `yaml:"expand"`
 	TranslationEngine string            `yaml:"translation_engine"`
 	OpenAIAPIKey           string            `yaml:"openai_api_key"`
 	OpenAIModel            string            `yaml:"openai_model"`
