@@ -55,6 +55,7 @@ func (s *Server) handle(w http.ResponseWriter, r *http.Request) {
 	result, err := s.tr.Translate(text, s.targetLang)
 	if err != nil {
 		log.Printf("translation error: %v", err)
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		return
 	}
 

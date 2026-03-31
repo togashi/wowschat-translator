@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"strings"
@@ -96,7 +97,8 @@ func (t *DeepLTranslator) Translate(text, targetLang string) (string, error) {
 	t.debugf("deepl status=%d", resp.StatusCode)
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("DeepL API status %d", resp.StatusCode)
+		data, _ := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("DeepL API status %d: %s", resp.StatusCode, strings.TrimSpace(string(data)))
 	}
 
 	var result translateResponse
