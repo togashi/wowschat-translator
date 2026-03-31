@@ -139,6 +139,7 @@ func (t *GPTTranslator) Translate(text, targetLang string) (string, error) {
 	}()
 
 	t.debugf("translate start model=%s temp=%.3f target=%s text_len=%d", t.model, t.temperature, targetLang, len(text))
+	t.trace("gpt", "input", text, nil)
 
 	expanded := applyExpand(text, t.expand)
 	if expanded != text {
@@ -227,6 +228,9 @@ func (t *GPTTranslator) Translate(text, targetLang string) (string, error) {
 		return "", nil
 	}
 	t.debugf("translated source=%s translated_len=%d", translationResult.SourceLang, len(translationResult.Text))
+	t.trace("gpt", "output", translationResult.Text, map[string]any{
+		"source_lang": translationResult.SourceLang,
+	})
 
 	return formatOutput(t.outputFormat, translationResult.SourceLang, targetLang, text, translationResult.Text), nil
 }
