@@ -13,7 +13,7 @@ GPT / Claude 翻訳は、プロンプトやモデル調整、API コスト管理
 
 - DeepL を軸にした安定・シンプルな運用
 - 本家にはない任意機能としての GPT / Claude エンジンによるプロンプト駆動の調整
-- ゲーム用語向けの passthrough / glossary カスタマイズ
+- ゲーム用語向けの passthrough / glossary / expand カスタマイズ
 
 ## 仕組み
 
@@ -144,6 +144,10 @@ passthrough:
       - gg
       - /\b[A-Z]{2,}\b/
 
+expand:
+      cap: capture
+      torps: torpedoes
+
 glossary:
       AP: armor-piercing
       DD: destroyer
@@ -174,6 +178,8 @@ wowschat-translator.exe --translation-engine=gpt --openai-api-key=your-openai-ap
 外部プロンプト内にプレースホルダーがない場合、passthrough/glossary は自動追記されない。
 外部プロンプトを使わず埋め込み既定プロンプトを使う場合は、後方互換のため自動追記される。
 
+`expand` は略語を翻訳前にフルスペルに展開する（例: `cap` → `capture`）。単語境界でマッチするため、長い単語の一部に誤マッチしない。glossary（プロンプト経由の翻訳指示）と異なり、入力テキストを直接書き換えるため、LLM が文法的に正しい文として解釈しやすくなる。
+
 ### 任意機能: Claude 翻訳（上級者向け）
 
 `translation_engine: claude` は、Anthropic の Claude を使ってモデルやプロンプトを自分で調整したい上級者向けの設定。
@@ -196,6 +202,10 @@ anthropic_prompt_file: "prompts/my_claude_system_prompt.txt" # 任意
 passthrough:
       - gg
       - /\b[A-Z]{2,}\b/
+
+expand:
+      cap: capture
+      torps: torpedoes
 
 glossary:
       AP: armor-piercing
