@@ -7,7 +7,7 @@ This file captures repository-specific guidance for GPT-style coding agents.
 - Project: wowschat-translator (Go)
 - Purpose: Translate World of Warships in-game chat.
 - Default engine: DeepL
-- Optional advanced engine: GPT (OpenAI Responses API)
+- Optional advanced engines: GPT (OpenAI Responses API), Claude (Anthropic Messages API)
 
 ## Core Architecture
 
@@ -17,6 +17,8 @@ This file captures repository-specific guidance for GPT-style coding agents.
 - Translator interface + shared formatting: internal/translator/translator.go
 - DeepL implementation: internal/translator/deepl_translator.go
 - GPT implementation: internal/translator/gpt_translator.go
+- Claude implementation: internal/translator/claude_translator.go
+- Shared prompt loader: internal/translator/prompt.go
 - Trace model: internal/translator/trace.go
 
 ## Configuration Rules
@@ -25,12 +27,13 @@ This file captures repository-specific guidance for GPT-style coding agents.
 - Primary DeepL key: deepl_api_key
 - Legacy DeepL key fallback: api_key
 - GPT config keys: openai_api_key, openai_model, openai_prompt_file, openai_temperature
-- Supported engines: deepl, gpt
+- Claude config keys: anthropic_api_key, anthropic_model, anthropic_prompt_file, anthropic_temperature
+- Supported engines: deepl, gpt, claude
 
-## Prompt Behavior (GPT)
+## Prompt Behavior (GPT / Claude)
 
-- Embedded default prompt file: internal/translator/prompts/gpt_system_prompt.txt
-- External prompt override can be provided with openai_prompt_file
+- Embedded default prompt file: internal/translator/prompts/gpt_system_prompt.txt (shared by GPT and Claude)
+- External prompt override can be provided with openai_prompt_file (GPT) or anthropic_prompt_file (Claude)
 - External prompt supports placeholders:
   - {{PASSTHROUGH}}
   - {{GLOSSARY}}
@@ -39,10 +42,12 @@ This file captures repository-specific guidance for GPT-style coding agents.
 
 ## Passthrough/Glossary Notes
 
-- Passthrough rule kinds: exact, contains, prefix, regex
-- Prefix is checked against the full input string start.
-- Matching is case-sensitive except when regex uses inline flags (example: (?i)).
-- Passthrough rules are cached in GPT translator.
+- Passthrough rule syntax:
+  - `word` (plain) — word-boundary match, case-insensitive (`\b` regex)
+  - `RPF: *` (trailing `*`) — prefix match against the full input string start
+  - `/pattern/` or `/pattern/flags` — regex match (Go regexp syntax)
+- Plain words use case-insensitive word-boundary matching by default.
+- Passthrough rules are cached in GPT and Claude translators.
 - Glossary entries are rendered in sorted key order for deterministic prompts.
 - If passthrough masking covers the entire input, GPT API call is skipped.
 

@@ -8,7 +8,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"regexp"
 	"sort"
 	"strings"
@@ -315,83 +314,16 @@ func buildGlossaryPromptBlock(glossary map[string]string) string {
 }
 
 func (t *GPTTranslator) getSystemPrompt() string {
-	defaultPrompt := strings.TrimSpace(embeddedGPTSystemPrompt)
-	if defaultPrompt == "" {
-		defaultPrompt = "You are a translation helper for casual in-game chat."
-	}
-
-	promptFile := strings.TrimSpace(t.promptFile)
-	if promptFile == "" {
-		t.promptMu.RLock()
-		if t.promptCached {
-			value := t.promptValue
-			t.promptMu.RUnlock()
-			return value
-		}
-		t.promptMu.RUnlock()
-
-		t.promptMu.Lock()
-		if !t.promptCached {
-			t.promptValue = defaultPrompt
-			t.promptCached = true
-			t.promptPath = ""
-			t.promptModTime = time.Time{}
-		}
-		value := t.promptValue
-		t.promptMu.Unlock()
-		return value
-	}
-
-	info, err := os.Stat(promptFile)
-	if err == nil && !info.IsDir() {
-		modTime := info.ModTime()
-
-		t.promptMu.RLock()
-		if t.promptCached && t.promptPath == promptFile && t.promptModTime.Equal(modTime) {
-			value := t.promptValue
-			t.promptMu.RUnlock()
-			return value
-		}
-		t.promptMu.RUnlock()
-
-		if data, readErr := os.ReadFile(promptFile); readErr == nil {
-			if loaded := strings.TrimSpace(string(data)); loaded != "" {
-				t.promptMu.Lock()
-				t.promptValue = loaded
-				t.promptCached = true
-				t.promptPath = promptFile
-				t.promptModTime = modTime
-				t.promptMu.Unlock()
-				t.debugf("loaded prompt file: %s", promptFile)
-				return loaded
-			}
-			t.debugf("prompt file is empty, using default: %s", promptFile)
-		} else {
-			t.debugf("prompt file load failed, using default: %s (%v)", promptFile, readErr)
-		}
-	} else if err != nil {
-		t.debugf("prompt file load failed, using default: %s (%v)", promptFile, err)
-	}
-
-	t.promptMu.RLock()
-	if t.promptCached {
-		value := t.promptValue
-		t.promptMu.RUnlock()
-		return value
-	}
-	t.promptMu.RUnlock()
-
-	t.promptMu.Lock()
-	if !t.promptCached {
-		t.promptValue = defaultPrompt
-		t.promptCached = true
-		t.promptPath = ""
-		t.promptModTime = time.Time{}
-	}
-	value := t.promptValue
-	t.promptMu.Unlock()
-
-	return value
+	return getSystemPromptFromFileOrDefault(
+		t.promptFile,
+		embeddedGPTSystemPrompt,
+		&t.promptMu,
+		&t.promptCached,
+		&t.promptValue,
+		&t.promptPath,
+		&t.promptModTime,
+		func(format string, args ...any) { t.debugf(format, args...) },
+	)
 }
 
 func (t *GPTTranslator) getPassthroughRules() []passthroughRule {
@@ -483,27 +415,34 @@ func buildPassthroughRules(items []string) []passthroughRule {
 		}
 
 		switch {
-		case strings.HasPrefix(raw, "regex:"):
-			pattern := strings.TrimSpace(strings.TrimPrefix(raw, "regex:"))
+		case len(raw) >= 2 && raw[0] == '/' && strings.ContainsRune(raw[1:], '/'):
+			// regex literal: /pattern/ or /pattern/flags
+			lastSlash := strings.LastIndex(raw[1:], "/") + 1
+			pattern := raw[1:lastSlash]
+			flags := raw[lastSlash+1:]
+			if pattern == "" {
+				continue
+			}
+			if flags != "" {
+				pattern = "(?" + flags + ")" + pattern
+			}
 			re, err := regexp.Compile(pattern)
 			if err != nil {
 				continue
 			}
 			rules = append(rules, passthroughRule{kind: "regex", value: pattern, pattern: re})
-		case strings.HasPrefix(raw, "prefix:"):
-			value := strings.TrimSpace(strings.TrimPrefix(raw, "prefix:"))
+		case strings.HasSuffix(raw, "*"):
+			value := raw[:len(raw)-1]
 			if value == "" {
 				continue
 			}
 			rules = append(rules, passthroughRule{kind: "prefix", value: value})
-		case strings.HasPrefix(raw, "contains:"):
-			value := strings.TrimSpace(strings.TrimPrefix(raw, "contains:"))
-			if value == "" {
+		default:
+			re, err := regexp.Compile(`(?i)\b` + regexp.QuoteMeta(raw) + `\b`)
+			if err != nil {
 				continue
 			}
-			rules = append(rules, passthroughRule{kind: "contains", value: value})
-		default:
-			rules = append(rules, passthroughRule{kind: "exact", value: raw})
+			rules = append(rules, passthroughRule{kind: "exact", value: raw, pattern: re})
 		}
 	}
 	return rules
@@ -521,12 +460,21 @@ func applyPassthroughRules(text string, rules []passthroughRule) (string, []mask
 
 	for _, rule := range rules {
 		switch rule.kind {
-		case "exact", "contains":
-			if rule.value == "" || !strings.Contains(maskedText, rule.value) {
+		case "exact":
+			if rule.pattern == nil {
 				continue
 			}
-			placeholder := mask(rule.value)
-			maskedText = strings.ReplaceAll(maskedText, rule.value, placeholder)
+			indexes := rule.pattern.FindAllStringIndex(maskedText, -1)
+			for i := len(indexes) - 1; i >= 0; i-- {
+				start := indexes[i][0]
+				end := indexes[i][1]
+				if start < 0 || end <= start || end > len(maskedText) {
+					continue
+				}
+				original := maskedText[start:end]
+				placeholder := mask(original)
+				maskedText = maskedText[:start] + placeholder + maskedText[end:]
+			}
 		case "prefix":
 			if rule.value == "" || !strings.HasPrefix(maskedText, rule.value) {
 				continue

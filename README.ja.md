@@ -2,30 +2,31 @@
 
 **[English](README.md)**
 
-World of Warships のゲーム内チャットを翻訳するサービス。
-[WoWSChatTranslator](https://github.com/AndrewTaro/WoWSChatTranslator) の GUI なし移植版。
+World of Warships のゲーム内チャットをリアルタイムに翻訳するローカルツール。
+[WoWSChatTranslator](https://github.com/AndrewTaro/WoWSChatTranslator) の GUI なし移植版 + α。
 
-本家にはない拡張機能として、GPT モードでは調整次第でより柔軟な翻訳挙動を実現できる。
-GPT 翻訳は、プロンプトやモデル調整、API コスト管理を理解している人向けの任意オプション。
+本家にはない拡張機能として、GPT / Claude モードでは調整次第でより柔軟な翻訳挙動を実現できる。
+GPT / Claude 翻訳は、プロンプトやモデル調整、API コスト管理を理解している人向けの任意オプション。
 既定・推奨エンジンは本家と同じ DeepL。
 
 ## ハイライト
 
 - DeepL を軸にした安定・シンプルな運用
-- 本家にはない任意機能としての GPT エンジンによるプロンプト駆動の調整
+- 本家にはない任意機能としての GPT / Claude エンジンによるプロンプト駆動の調整
 - ゲーム用語向けの passthrough / glossary カスタマイズ
 
 ## 仕組み
 
 TTaro Chat Mod がチャットメッセージを `http://localhost:5000/wowschat/?text=...` へ送信し、
-wowschat-translator が選択されたエンジン（既定は DeepL、任意で GPT）で翻訳してレスポンスとして返す。
+wowschat-translator が選択されたエンジン（既定は DeepL、任意で GPT / Claude）で翻訳してレスポンスとして返す。
 
 ```
 WoWs (TTaro Chat Mod)
   └─ GET http://localhost:5000/wowschat/?text=[メッセージ]
         └─ wowschat-translator
               ├─ DeepL API（既定）
-              └─ OpenAI Responses API（任意: GPT）
+              ├─ OpenAI Responses API（任意: GPT）
+              └─ Anthropic Messages API（任意: Claude）
 ```
 
 ## 必要なもの
@@ -35,9 +36,10 @@ WoWs (TTaro Chat Mod)
 - [DeepL API キー](https://www.deepl.com/ja/pro-api)（無料プランで可）
 - [TTaro Chat Mod](https://github.com/AndrewTaro/TTaroChat)
 
-### 任意（GPT 翻訳を使う場合のみ）
+### 任意（GPT / Claude 翻訳を使う場合のみ）
 
-- [OpenAI API キー](https://platform.openai.com/api-keys)
+- [OpenAI API キー](https://platform.openai.com/api-keys)（GPT）
+- [Anthropic API キー](https://console.anthropic.com/settings/keys)（Claude）
 
 ## 謝辞
 
@@ -140,7 +142,7 @@ openai_prompt_file: "prompts/my_gpt_system_prompt.txt" # 任意
 
 passthrough:
       - gg
-      - regex:\b[A-Z]{2,}\b
+      - /\b[A-Z]{2,}\b/
 
 glossary:
       AP: armor-piercing
@@ -171,6 +173,52 @@ wowschat-translator.exe --translation-engine=gpt --openai-api-key=your-openai-ap
 外部プロンプトファイルを読み込んだ場合、これらのプレースホルダー位置に展開される。
 外部プロンプト内にプレースホルダーがない場合、passthrough/glossary は自動追記されない。
 外部プロンプトを使わず埋め込み既定プロンプトを使う場合は、後方互換のため自動追記される。
+
+### 任意機能: Claude 翻訳（上級者向け）
+
+`translation_engine: claude` は、Anthropic の Claude を使ってモデルやプロンプトを自分で調整したい上級者向けの設定。
+
+注意点:
+
+- Anthropic API キーが必要。
+- モデル/temperature の調整と API 利用コスト管理は利用者側の責任。
+- 手軽さと保守性を重視するなら DeepL のままが安全。
+
+設定ファイル例:
+
+```yaml
+translation_engine: "claude"
+anthropic_api_key: "your-anthropic-api-key"
+anthropic_model: "claude-haiku-4-5-20251001"
+anthropic_temperature: 0.2
+anthropic_prompt_file: "prompts/my_claude_system_prompt.txt" # 任意
+
+passthrough:
+      - gg
+      - /\b[A-Z]{2,}\b/
+
+glossary:
+      AP: armor-piercing
+      DD: destroyer
+```
+
+環境変数:
+
+```
+WOWSCHAT_TRANSLATION_ENGINE=claude
+WOWSCHAT_ANTHROPIC_API_KEY=your-anthropic-api-key
+WOWSCHAT_ANTHROPIC_MODEL=claude-haiku-4-5-20251001
+WOWSCHAT_ANTHROPIC_TEMPERATURE=0.2
+WOWSCHAT_ANTHROPIC_PROMPT_FILE=prompts/my_claude_system_prompt.txt
+```
+
+コマンドライン引数:
+
+```
+wowschat-translator.exe --translation-engine=claude --anthropic-api-key=your-anthropic-api-key --anthropic-model=claude-haiku-4-5-20251001 --anthropic-temperature=0.2 --anthropic-prompt-file=prompts/my_claude_system_prompt.txt
+```
+
+プロンプトプレースホルダーは GPT モードと同様（`{{PASSTHROUGH}}`、`{{GLOSSARY}}`）。
 
 ### 翻訳先言語コード
 
