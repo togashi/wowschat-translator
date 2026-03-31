@@ -40,7 +40,7 @@ This file captures repository-specific guidance for GPT-style coding agents.
 - If external prompt is active and placeholders are absent, passthrough/glossary are not auto-appended.
 - If embedded default prompt is used, passthrough/glossary are auto-appended for compatibility.
 
-## Passthrough/Glossary Notes
+## Passthrough/Glossary/Expand Notes
 
 - Passthrough rule syntax:
   - `word` (plain) — word-boundary match, case-insensitive (`\b` regex)
@@ -48,8 +48,10 @@ This file captures repository-specific guidance for GPT-style coding agents.
   - `/pattern/` or `/pattern/flags` — regex match (Go regexp syntax)
 - Plain words use case-insensitive word-boundary matching by default.
 - Passthrough rules are cached in GPT and Claude translators.
+- Expand (`expand` config) rewrites abbreviations to full words before translation using `\b` word-boundary matching (case-insensitive). Applied before passthrough masking.
+- Processing order: expand → passthrough masking → LLM translation → restore masked segments.
 - Glossary entries are rendered in sorted key order for deterministic prompts.
-- If passthrough masking covers the entire input, GPT API call is skipped.
+- If passthrough masking covers the entire input, LLM API call is skipped.
 
 ## First-Run UX and Packaging
 
