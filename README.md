@@ -2,7 +2,7 @@
 
 **[日本語](README.ja.md)**
 
-A local tool that translates in-game chat in World of Warships in real time.
+A local tool that translates battle chat in World of Warships in real time.
 A headless port of [WoWSChatTranslator](https://github.com/AndrewTaro/WoWSChatTranslator), with a few extra tricks.
 
 As an optional extension not present in the original project, GPT and Claude modes enable more customizable translation behavior when tuned carefully.

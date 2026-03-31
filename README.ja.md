@@ -2,7 +2,7 @@
 
 **[English](README.md)**
 
-World of Warships のゲーム内チャットをリアルタイムに翻訳するローカルツール。
+World of Warships の戦闘中チャットをリアルタイムに翻訳するローカルツール。
 [WoWSChatTranslator](https://github.com/AndrewTaro/WoWSChatTranslator) の GUI なし移植版 + α。
 
 本家にはない拡張機能として、GPT / Claude モードでは調整次第でより柔軟な翻訳挙動を実現できる。
