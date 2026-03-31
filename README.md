@@ -120,6 +120,12 @@ Available tags:
 | `{SourceText}` | Original input text |
 | `{TranslatedText}` | Translated text from DeepL |
 
+**Tip:** If translations sometimes lose context, showing both the original and translated text can help:
+
+```
+output_format: "({DetectedSourceLanguage}) {SourceText}\n({TargetLanguage}) {TranslatedText}"
+```
+
 ### Optional: GPT translation (advanced)
 
 `translation_engine: gpt` is intended for advanced users who want to tune model/prompt behavior.

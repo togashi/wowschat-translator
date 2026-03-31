@@ -121,6 +121,12 @@ wowschat-translator.exe --api-key=your-deepl-api-key --target-lang=JA --output-f
 | `{SourceText}` | 元の入力テキスト |
 | `{TranslatedText}` | DeepL の翻訳結果テキスト |
 
+**Tips:** 翻訳だけだと文脈が分かりにくいことがある場合、原文と訳文を両方表示する設定が便利:
+
+```
+output_format: "({DetectedSourceLanguage}) {SourceText}\n({TargetLanguage}) {TranslatedText}"
+```
+
 ### 任意機能: GPT 翻訳（上級者向け）
 
 `translation_engine: gpt` は、モデルやプロンプトを自分で調整したい上級者向けの設定。
