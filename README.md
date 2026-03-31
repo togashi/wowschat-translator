@@ -13,7 +13,7 @@ The default and recommended engine remains DeepL, same as the original project.
 
 - DeepL-first operation for stable and simple setup
 - Optional GPT / Claude engines (not in the original project) for prompt-driven customization
-- Configurable passthrough/glossary controls for game-specific terms
+- Configurable passthrough/glossary/expand controls for game-specific terms
 
 ## How it works
 
@@ -143,6 +143,10 @@ passthrough:
       - gg
       - /\b[A-Z]{2,}\b/
 
+expand:
+      cap: capture
+      torps: torpedoes
+
 glossary:
       AP: armor-piercing
       DD: destroyer
@@ -173,6 +177,8 @@ If an external prompt file is loaded, these placeholders are replaced in-place.
 If placeholders are omitted in that external file, passthrough/glossary are not auto-appended.
 When no external prompt file is used (embedded default prompt), passthrough/glossary are appended automatically for backward compatibility.
 
+`expand` expands abbreviations into full words before translation (e.g. `cap` → `capture`). This uses word-boundary matching, so it won't match inside longer words. Unlike glossary (which hints the LLM via prompt), expand rewrites the input text directly, giving the LLM a grammatically clearer sentence to work with.
+
 ### Optional: Claude translation (advanced)
 
 `translation_engine: claude` is intended for advanced users who want to tune model/prompt behavior using Anthropic's Claude.
@@ -195,6 +201,10 @@ anthropic_prompt_file: "prompts/my_claude_system_prompt.txt" # optional
 passthrough:
       - gg
       - /\b[A-Z]{2,}\b/
+
+expand:
+      cap: capture
+      torps: torpedoes
 
 glossary:
       AP: armor-piercing

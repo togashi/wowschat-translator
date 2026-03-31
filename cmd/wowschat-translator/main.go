@@ -129,6 +129,7 @@ func main() {
 			cfg.OutputFormat,
 			cfg.Passthrough,
 			cfg.Glossary,
+			cfg.Expand,
 			cfg.Debug,
 		)
 	case "claude":
@@ -144,6 +145,7 @@ func main() {
 			cfg.OutputFormat,
 			cfg.Passthrough,
 			cfg.Glossary,
+			cfg.Expand,
 			cfg.Debug,
 		)
 	default:

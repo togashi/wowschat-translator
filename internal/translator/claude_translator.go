@@ -22,6 +22,7 @@ type ClaudeTranslator struct {
 	outputFormat string
 	passthrough []string
 	glossary    map[string]string
+	expand      map[string]string
 	debug       bool
 	traceSink   func(TranslatorTraceEvent)
 	promptMu      sync.RWMutex
@@ -63,6 +64,7 @@ func NewClaudeTranslator(
 	outputFormat string,
 	passthrough []string,
 	glossary map[string]string,
+	expand map[string]string,
 	debug bool,
 ) *ClaudeTranslator {
 	if model == "" {
@@ -80,6 +82,7 @@ func NewClaudeTranslator(
 		outputFormat: outputFormat,
 		passthrough:  passthrough,
 		glossary:     glossary,
+		expand:       expand,
 		debug:        debug,
 		httpClient: &http.Client{
 			Timeout: 10 * time.Second,
@@ -108,9 +111,15 @@ func (t *ClaudeTranslator) Translate(text, targetLang string) (string, error) {
 
 	t.debugf("translate start model=%s temp=%.3f target=%s text_len=%d", t.model, t.temperature, targetLang, len(text))
 
+	expanded := applyExpand(text, t.expand)
+	if expanded != text {
+		t.debugf("expand applied: %q -> %q", text, expanded)
+	}
+
 	rules := t.getPassthroughRules()
-	maskedText, segments := applyPassthroughRules(text, rules)
+	maskedText, segments := applyPassthroughRules(expanded, rules)
 	t.debugf("passthrough rules=%d masked_segments=%d", len(rules), len(segments))
+	t.debugf("llm input: %q", maskedText)
 	if isPassthroughOnlyMaskedText(maskedText) {
 		t.debugf("skip translation passthrough-only text")
 		t.trace("claude", "skip", "passthrough-only text", map[string]any{
