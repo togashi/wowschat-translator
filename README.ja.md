@@ -2,8 +2,8 @@
 
 **[English](README.md)**
 
-World of Warships のゲーム内チャットを翻訳するサービス。
-[WoWSChatTranslator](https://github.com/AndrewTaro/WoWSChatTranslator) の GUI なし移植版。
+World of Warships のゲーム内チャットをリアルタイムに翻訳するローカルツール。
+[WoWSChatTranslator](https://github.com/AndrewTaro/WoWSChatTranslator) の GUI なし移植版 + α。
 
 本家にはない拡張機能として、GPT / Claude モードでは調整次第でより柔軟な翻訳挙動を実現できる。
 GPT / Claude 翻訳は、プロンプトやモデル調整、API コスト管理を理解している人向けの任意オプション。
@@ -142,7 +142,7 @@ openai_prompt_file: "prompts/my_gpt_system_prompt.txt" # 任意
 
 passthrough:
       - gg
-      - regex:\b[A-Z]{2,}\b
+      - /\b[A-Z]{2,}\b/
 
 glossary:
       AP: armor-piercing
@@ -195,7 +195,7 @@ anthropic_prompt_file: "prompts/my_claude_system_prompt.txt" # 任意
 
 passthrough:
       - gg
-      - regex:\b[A-Z]{2,}\b
+      - /\b[A-Z]{2,}\b/
 
 glossary:
       AP: armor-piercing

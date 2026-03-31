@@ -415,27 +415,34 @@ func buildPassthroughRules(items []string) []passthroughRule {
 		}
 
 		switch {
-		case strings.HasPrefix(raw, "regex:"):
-			pattern := strings.TrimSpace(strings.TrimPrefix(raw, "regex:"))
+		case len(raw) >= 2 && raw[0] == '/' && strings.ContainsRune(raw[1:], '/'):
+			// regex literal: /pattern/ or /pattern/flags
+			lastSlash := strings.LastIndex(raw[1:], "/") + 1
+			pattern := raw[1:lastSlash]
+			flags := raw[lastSlash+1:]
+			if pattern == "" {
+				continue
+			}
+			if flags != "" {
+				pattern = "(?" + flags + ")" + pattern
+			}
 			re, err := regexp.Compile(pattern)
 			if err != nil {
 				continue
 			}
 			rules = append(rules, passthroughRule{kind: "regex", value: pattern, pattern: re})
-		case strings.HasPrefix(raw, "prefix:"):
-			value := strings.TrimSpace(strings.TrimPrefix(raw, "prefix:"))
+		case strings.HasSuffix(raw, "*"):
+			value := raw[:len(raw)-1]
 			if value == "" {
 				continue
 			}
 			rules = append(rules, passthroughRule{kind: "prefix", value: value})
-		case strings.HasPrefix(raw, "contains:"):
-			value := strings.TrimSpace(strings.TrimPrefix(raw, "contains:"))
-			if value == "" {
+		default:
+			re, err := regexp.Compile(`(?i)\b` + regexp.QuoteMeta(raw) + `\b`)
+			if err != nil {
 				continue
 			}
-			rules = append(rules, passthroughRule{kind: "contains", value: value})
-		default:
-			rules = append(rules, passthroughRule{kind: "exact", value: raw})
+			rules = append(rules, passthroughRule{kind: "exact", value: raw, pattern: re})
 		}
 	}
 	return rules
@@ -453,12 +460,21 @@ func applyPassthroughRules(text string, rules []passthroughRule) (string, []mask
 
 	for _, rule := range rules {
 		switch rule.kind {
-		case "exact", "contains":
-			if rule.value == "" || !strings.Contains(maskedText, rule.value) {
+		case "exact":
+			if rule.pattern == nil {
 				continue
 			}
-			placeholder := mask(rule.value)
-			maskedText = strings.ReplaceAll(maskedText, rule.value, placeholder)
+			indexes := rule.pattern.FindAllStringIndex(maskedText, -1)
+			for i := len(indexes) - 1; i >= 0; i-- {
+				start := indexes[i][0]
+				end := indexes[i][1]
+				if start < 0 || end <= start || end > len(maskedText) {
+					continue
+				}
+				original := maskedText[start:end]
+				placeholder := mask(original)
+				maskedText = maskedText[:start] + placeholder + maskedText[end:]
+			}
 		case "prefix":
 			if rule.value == "" || !strings.HasPrefix(maskedText, rule.value) {
 				continue

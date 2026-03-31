@@ -2,8 +2,8 @@
 
 **[日本語](README.ja.md)**
 
-A service that translates in-game chat in World of Warships.
-A headless port of [WoWSChatTranslator](https://github.com/AndrewTaro/WoWSChatTranslator).
+A local tool that translates in-game chat in World of Warships in real time.
+A headless port of [WoWSChatTranslator](https://github.com/AndrewTaro/WoWSChatTranslator), with a few extra tricks.
 
 As an optional extension not present in the original project, GPT and Claude modes enable more customizable translation behavior when tuned carefully.
 GPT and Claude translation are available as advanced optional modes for users who understand prompt/model tuning and API cost trade-offs.
@@ -141,7 +141,7 @@ openai_prompt_file: "prompts/my_gpt_system_prompt.txt" # optional
 
 passthrough:
       - gg
-      - regex:\b[A-Z]{2,}\b
+      - /\b[A-Z]{2,}\b/
 
 glossary:
       AP: armor-piercing
@@ -194,7 +194,7 @@ anthropic_prompt_file: "prompts/my_claude_system_prompt.txt" # optional
 
 passthrough:
       - gg
-      - regex:\b[A-Z]{2,}\b
+      - /\b[A-Z]{2,}\b/
 
 glossary:
       AP: armor-piercing

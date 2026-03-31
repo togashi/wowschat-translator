@@ -11,3 +11,4 @@ deepl_api_key: "your-deepl-api-key-here"
 passthrough:
   - gg
   - thx
+  - "RPF: *"

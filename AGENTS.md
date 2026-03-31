@@ -42,9 +42,11 @@ This file captures repository-specific guidance for GPT-style coding agents.
 
 ## Passthrough/Glossary Notes
 
-- Passthrough rule kinds: exact, contains, prefix, regex
-- Prefix is checked against the full input string start.
-- Matching is case-sensitive except when regex uses inline flags (example: (?i)).
+- Passthrough rule syntax:
+  - `word` (plain) — word-boundary match, case-insensitive (`\b` regex)
+  - `RPF: *` (trailing `*`) — prefix match against the full input string start
+  - `/pattern/` or `/pattern/flags` — regex match (Go regexp syntax)
+- Plain words use case-insensitive word-boundary matching by default.
 - Passthrough rules are cached in GPT and Claude translators.
 - Glossary entries are rendered in sorted key order for deterministic prompts.
 - If passthrough masking covers the entire input, GPT API call is skipped.
