@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"regexp"
 
 	"github.com/togashi/wowschat-translator/internal/translator"
 )
+
+var nonTranslatablePattern = regexp.MustCompile(`^[\p{P}\p{S}\p{N}\s]+$`)
 
 type Server struct {
 	tr           translator.Translator
@@ -55,6 +58,12 @@ func (s *Server) handle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("received: %q", text)
+
+	if nonTranslatablePattern.MatchString(text) {
+		log.Printf("skip: non-translatable text (symbols/numbers only)")
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		return
+	}
 
 	result, err := s.tr.Translate(text, s.targetLang)
 	if err != nil {
