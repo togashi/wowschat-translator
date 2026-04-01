@@ -19,6 +19,8 @@ type Config struct {
 	Passthrough       []string          `yaml:"passthrough"`
 	Glossary          map[string]string `yaml:"glossary"`
 	Expand            map[string]string `yaml:"expand"`
+	ListenPort        int               `yaml:"listen_port"`
+	EndpointPath      string            `yaml:"endpoint_path"`
 	TranslationEngine string            `yaml:"translation_engine"`
 	OpenAIAPIKey           string            `yaml:"openai_api_key"`
 	OpenAIModel            string            `yaml:"openai_model"`
@@ -106,6 +108,8 @@ func Load(
 		TargetLang:        "JA",
 		OutputFormat:      "({DetectedSourceLanguage}) {TranslatedText}",
 		TranslationEngine: "deepl",
+		ListenPort:        5000,
+		EndpointPath:      "/wowschat/",
 		OpenAIModel:          "gpt-5.4-mini",
 		OpenAITemperature:    0.2,
 		AnthropicModel:       "claude-haiku-4-5-20251001",

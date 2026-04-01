@@ -2,27 +2,31 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/togashi/wowschat-translator/internal/translator"
 )
 
-const listenAddr = "127.0.0.1:5000"
-
 type Server struct {
-	tr         translator.Translator
-	targetLang string
-	http       *http.Server
+	tr           translator.Translator
+	targetLang   string
+	listenAddr   string
+	endpointPath string
+	http         *http.Server
 }
 
-func New(tr translator.Translator, targetLang string) *Server {
+func New(tr translator.Translator, targetLang string, listenPort int, endpointPath string) *Server {
+	listenAddr := fmt.Sprintf("127.0.0.1:%d", listenPort)
 	s := &Server{
-		tr:         tr,
-		targetLang: targetLang,
+		tr:           tr,
+		targetLang:   targetLang,
+		listenAddr:   listenAddr,
+		endpointPath: endpointPath,
 	}
 	mux := http.NewServeMux()
-	mux.HandleFunc("/wowschat/", s.handle)
+	mux.HandleFunc(endpointPath, s.handle)
 	s.http = &http.Server{
 		Addr:    listenAddr,
 		Handler: mux,
@@ -32,7 +36,7 @@ func New(tr translator.Translator, targetLang string) *Server {
 
 // Start begins serving. Blocks until the server is closed.
 func (s *Server) Start() error {
-	log.Printf("listening on http://%s/wowschat/", listenAddr)
+	log.Printf("listening on http://%s%s", s.listenAddr, s.endpointPath)
 	if err := s.http.ListenAndServe(); err != http.ErrServerClosed {
 		return err
 	}

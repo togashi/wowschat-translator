@@ -181,7 +181,7 @@ func main() {
 		}
 	}
 
-	srv := server.New(tr, cfg.TargetLang)
+	srv := server.New(tr, cfg.TargetLang, cfg.ListenPort, cfg.EndpointPath)
 	prg := &program{srv: srv}
 
 	svc, err := service.New(prg, svcConfig)
