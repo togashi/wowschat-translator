@@ -13,18 +13,18 @@ import (
 )
 
 type ClaudeTranslator struct {
-	apiKey      string
-	baseURL     string
-	model       string
-	promptFile  string
-	temperature float64
-	httpClient  *http.Client
-	outputFormat string
-	passthrough []string
-	glossary    map[string]string
-	expand      map[string]string
-	debug       bool
-	traceSink   func(TranslatorTraceEvent)
+	apiKey        string
+	baseURL       string
+	model         string
+	promptFile    string
+	temperature   float64
+	httpClient    *http.Client
+	outputFormat  string
+	passthrough   []string
+	glossary      map[string]string
+	expand        map[string]string
+	debug         bool
+	traceSink     func(TranslatorTraceEvent)
 	promptMu      sync.RWMutex
 	promptCached  bool
 	promptValue   string
@@ -36,11 +36,11 @@ type ClaudeTranslator struct {
 }
 
 type claudeMessagesRequest struct {
-	Model       string           `json:"model"`
-	MaxTokens   int              `json:"max_tokens"`
-	System      string           `json:"system"`
-	Messages    []claudeMessage  `json:"messages"`
-	Temperature float64          `json:"temperature"`
+	Model       string          `json:"model"`
+	MaxTokens   int             `json:"max_tokens"`
+	System      string          `json:"system"`
+	Messages    []claudeMessage `json:"messages"`
+	Temperature float64         `json:"temperature"`
 }
 
 type claudeMessage struct {
@@ -194,10 +194,15 @@ func (t *ClaudeTranslator) Translate(text, targetLang string) (string, error) {
 
 	if strings.EqualFold(translationResult.SourceLang, targetLang) || translationResult.Text == text {
 		t.debugf("skip translation source=%s target=%s unchanged=%t", translationResult.SourceLang, targetLang, translationResult.Text == text)
-		t.debugf("translation note: %s", translationResult.TranslationNote)
+		if translationResult.TranslationNote != "" {
+			t.debugf("translation note: %s", translationResult.TranslationNote)
+		}
 		return "", nil
 	}
 	t.debugf("translated source=%s translated_len=%d", translationResult.SourceLang, len(translationResult.Text))
+	if translationResult.TranslationNote != "" {
+		t.debugf("translation note: %s", translationResult.TranslationNote)
+	}
 	t.trace("claude", "output", translationResult.Text, map[string]any{
 		"source_lang": translationResult.SourceLang,
 	})

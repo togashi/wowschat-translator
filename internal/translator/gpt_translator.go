@@ -224,10 +224,15 @@ func (t *GPTTranslator) Translate(text, targetLang string) (string, error) {
 
 	if strings.EqualFold(translationResult.SourceLang, targetLang) || translationResult.Text == text {
 		t.debugf("skip translation source=%s target=%s unchanged=%t", translationResult.SourceLang, targetLang, translationResult.Text == text)
-		t.debugf("translation note: %s", translationResult.TranslationNote)
+		if translationResult.TranslationNote != "" {
+			t.debugf("translation note: %s", translationResult.TranslationNote)
+		}
 		return "", nil
 	}
 	t.debugf("translated source=%s translated_len=%d", translationResult.SourceLang, len(translationResult.Text))
+	if translationResult.TranslationNote != "" {
+		t.debugf("translation note: %s", translationResult.TranslationNote)
+	}
 	t.trace("gpt", "output", translationResult.Text, map[string]any{
 		"source_lang": translationResult.SourceLang,
 	})
