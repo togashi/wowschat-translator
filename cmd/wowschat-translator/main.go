@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"sync"
 	"syscall"
@@ -159,6 +160,11 @@ func main() {
 	}
 
 	if cfg.TraceLogFile != "" {
+		if dir := filepath.Dir(cfg.TraceLogFile); dir != "." {
+			if err := os.MkdirAll(dir, 0o755); err != nil {
+				log.Fatalf("trace log dir: %v", err)
+			}
+		}
 		traceFile, err := os.OpenFile(cfg.TraceLogFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
 		if err != nil {
 			log.Fatalf("trace log file: %v", err)
