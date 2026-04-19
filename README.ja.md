@@ -31,15 +31,11 @@ WoWs (TTaro Chat Mod)
 
 ## 必要なもの
 
-### 必須
-
-- [DeepL API キー](https://www.deepl.com/ja/pro-api)（無料プランで可）
 - [TTaro Chat Mod](https://github.com/AndrewTaro/TTaroChat)
-
-### 任意（GPT / Claude 翻訳を使う場合のみ）
-
-- [OpenAI API キー](https://platform.openai.com/api-keys)（GPT）
-- [Anthropic API キー](https://console.anthropic.com/settings/keys)（Claude）
+- 使用する翻訳エンジンに対応した API キー:
+  - [DeepL API キー](https://www.deepl.com/ja/pro-api)（無料プランで可）— `translation_engine: deepl`（既定）
+  - [OpenAI API キー](https://platform.openai.com/api-keys) — `translation_engine: gpt`
+  - [Anthropic API キー](https://console.anthropic.com/settings/keys) — `translation_engine: claude`
 
 ## 謝辞
 
@@ -116,10 +112,10 @@ wowschat-translator.exe --api-key=your-deepl-api-key --target-lang=JA --output-f
 
 | タグ | 説明 |
 |------|------|
-| `{DetectedSourceLanguage}` | DeepL が検出した元言語（大文字化。例: `EN`） |
+| `{DetectedSourceLanguage}` | エンジンが検出した元言語（大文字化。例: `EN`） |
 | `{TargetLanguage}` | 指定した翻訳先言語（例: `JA`） |
 | `{SourceText}` | 元の入力テキスト |
-| `{TranslatedText}` | DeepL の翻訳結果テキスト |
+| `{TranslatedText}` | 翻訳結果テキスト |
 
 **Tips:** 翻訳だけだと文脈が分かりにくいことがある場合、原文と訳文を両方表示する設定が便利:
 
@@ -135,8 +131,6 @@ output_format: "({DetectedSourceLanguage}) {SourceText}\n({TargetLanguage}) {Tra
 
 - OpenAI API キーが必要。
 - モデル/temperature の調整と API 利用コスト管理は利用者側の責任。
-- 手軽さと保守性を重視するなら DeepL のままが安全。
-
 設定ファイル例:
 
 ```yaml
@@ -194,8 +188,6 @@ wowschat-translator.exe --translation-engine=gpt --openai-api-key=your-openai-ap
 
 - Anthropic API キーが必要。
 - モデル/temperature の調整と API 利用コスト管理は利用者側の責任。
-- 手軽さと保守性を重視するなら DeepL のままが安全。
-
 設定ファイル例:
 
 ```yaml
@@ -238,7 +230,7 @@ wowschat-translator.exe --translation-engine=claude --anthropic-api-key=your-ant
 
 ### 翻訳先言語コード
 
-DeepL がサポートする言語コードを指定する（大文字小文字は問わない）。
+言語コードを指定する（大文字小文字は問わない）。形式は DeepL の規約に準拠しており、GPT / Claude エンジンではプロンプト経由で解釈される。
 
 | コード | 言語 |
 |--------|------|

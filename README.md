@@ -31,15 +31,11 @@ WoWs (TTaro Chat Mod)
 
 ## Requirements
 
-### Required
-
-- [DeepL API key](https://www.deepl.com/pro-api) (free plan is fine)
 - [TTaro Chat Mod](https://github.com/AndrewTaro/TTaroChat)
-
-### Optional (only when using GPT or Claude translation)
-
-- [OpenAI API key](https://platform.openai.com/api-keys) (GPT)
-- [Anthropic API key](https://console.anthropic.com/settings/keys) (Claude)
+- An API key for the translation engine you choose:
+  - [DeepL API key](https://www.deepl.com/pro-api) (free plan is fine) — for `translation_engine: deepl` (default)
+  - [OpenAI API key](https://platform.openai.com/api-keys) — for `translation_engine: gpt`
+  - [Anthropic API key](https://console.anthropic.com/settings/keys) — for `translation_engine: claude`
 
 ## Acknowledgements
 
@@ -115,10 +111,10 @@ Available tags:
 
 | Tag | Description |
 |-----|-------------|
-| `{DetectedSourceLanguage}` | Source language detected by DeepL (uppercased, e.g. `EN`) |
+| `{DetectedSourceLanguage}` | Source language detected by the engine (uppercased, e.g. `EN`) |
 | `{TargetLanguage}` | Requested target language (e.g. `JA`) |
 | `{SourceText}` | Original input text |
-| `{TranslatedText}` | Translated text from DeepL |
+| `{TranslatedText}` | Translated text |
 
 **Tip:** If translations sometimes lose context, showing both the original and translated text can help:
 
@@ -134,7 +130,6 @@ Notes:
 
 - You need your own OpenAI API key.
 - You are responsible for model/temperature tuning and API usage cost.
-- DeepL remains the safer default for simple, low-maintenance operation.
 
 Config file example:
 
@@ -193,7 +188,6 @@ Notes:
 
 - You need your own Anthropic API key.
 - You are responsible for model/temperature tuning and API usage cost.
-- DeepL remains the safer default for simple, low-maintenance operation.
 
 Config file example:
 
@@ -237,7 +231,7 @@ Prompt placeholders work the same as GPT mode (`{{PASSTHROUGH}}`, `{{GLOSSARY}}`
 
 ### Target language codes
 
-Specify a language code supported by DeepL (case-insensitive).
+Specify a language code (case-insensitive). The format follows the DeepL convention; GPT and Claude engines interpret these codes via prompt.
 
 | Code | Language |
 |------|----------|
@@ -250,7 +244,7 @@ Specify a language code supported by DeepL (case-insensitive).
 | `FR` | French |
 | `RU` | Russian |
 
-See the [DeepL documentation](https://developers.deepl.com/docs/resources/supported-languages) for all language codes.
+For a full list of language codes, see the [DeepL documentation](https://developers.deepl.com/docs/resources/supported-languages).
 
 ## Usage
 
