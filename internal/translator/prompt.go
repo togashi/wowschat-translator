@@ -2,10 +2,73 @@ package translator
 
 import (
 	"os"
+	"sort"
 	"strings"
 	"sync"
 	"time"
 )
+
+const (
+	promptPlaceholderPassthrough = "{{PASSTHROUGH}}"
+	promptPlaceholderGlossary    = "{{GLOSSARY}}"
+)
+
+func buildPassthroughPromptBlock(items []string) string {
+	if len(items) == 0 {
+		return ""
+	}
+
+	var b strings.Builder
+	b.WriteString("\n\nPassthrough words/phrases (keep as-is):\n")
+	count := 0
+	for _, s := range items {
+		if strings.TrimSpace(s) == "" {
+			continue
+		}
+		b.WriteString("- ")
+		b.WriteString(s)
+		b.WriteString("\n")
+		count++
+	}
+
+	if count == 0 {
+		return ""
+	}
+	return b.String()
+}
+
+func buildGlossaryPromptBlock(glossary map[string]string) string {
+	if len(glossary) == 0 {
+		return ""
+	}
+
+	keys := make([]string, 0, len(glossary))
+	for src := range glossary {
+		keys = append(keys, src)
+	}
+	sort.Strings(keys)
+
+	var b strings.Builder
+	b.WriteString("\nGlossary (source -> preferred target):\n")
+	count := 0
+	for _, src := range keys {
+		dst := glossary[src]
+		if strings.TrimSpace(src) == "" || strings.TrimSpace(dst) == "" {
+			continue
+		}
+		b.WriteString("- ")
+		b.WriteString(src)
+		b.WriteString(" -> ")
+		b.WriteString(dst)
+		b.WriteString("\n")
+		count++
+	}
+
+	if count == 0 {
+		return ""
+	}
+	return b.String()
+}
 
 // getSystemPromptFromFileOrDefault loads a system prompt from an external file
 // (with modification-time caching) or falls back to the embedded default.
