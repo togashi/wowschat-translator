@@ -245,6 +245,7 @@ func (t *GeminiTranslator) Translate(text, targetLang string) (string, error) {
 		if translationResult.TranslationNote != "" {
 			t.debugf("translation note: %s", translationResult.TranslationNote)
 		}
+		t.debugf("raw response body: %s", string(rawBody))
 		return "", nil
 	}
 	t.debugf("translated source=%s translated_len=%d", translationResult.SourceLang, len(translationResult.Text))
