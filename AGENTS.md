@@ -64,7 +64,7 @@ This file captures repository-specific guidance for GPT-style coding agents.
 ## Documentation Conventions
 
 - Keep README.md and README.ja.md aligned for behavior and setup steps.
-- Position GPT as optional advanced functionality.
+- Position GPT / Claude / Gemini as optional advanced functionality.
 - Keep DeepL as default/recommended path.
 
 ## Validation Checklist
@@ -73,7 +73,7 @@ Before finalizing changes:
 
 1. Run: go test ./...
 2. If config behavior changed, ensure README.md + README.ja.md + config.yaml.example remain consistent.
-3. If GPT prompt behavior changed, update this file and prompt docs sections.
+3. If GPT / Claude / Gemini prompt behavior changed, update this file and prompt docs sections.
 
 ## Commit Style
 

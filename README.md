@@ -5,20 +5,20 @@
 A local tool that translates battle chat in World of Warships in real time.
 A headless port of [WoWSChatTranslator](https://github.com/AndrewTaro/WoWSChatTranslator), with a few extra tricks.
 
-As an optional extension not present in the original project, GPT and Claude modes enable more customizable translation behavior when tuned carefully.
-GPT and Claude translation are available as advanced optional modes for users who understand prompt/model tuning and API cost trade-offs.
+As an optional extension not present in the original project, GPT, Claude, and Gemini modes enable more customizable translation behavior when tuned carefully.
+GPT, Claude, and Gemini translation are available as advanced optional modes for users who understand prompt/model tuning and API cost trade-offs.
 The default and recommended engine remains DeepL, same as the original project.
 
 ## Highlights
 
 - DeepL-first operation for stable and simple setup
-- Optional GPT / Claude engines (not in the original project) for prompt-driven customization
+- Optional GPT / Claude / Gemini engines (not in the original project) for prompt-driven customization
 - Configurable passthrough/glossary/expand controls for game-specific terms
 
 ## How it works
 
 TTaro Chat Mod sends chat messages to `http://localhost:5000/wowschat/?text=...`,
-and wowschat-translator translates them with the selected engine (DeepL by default, GPT/Claude optional) and returns the result.
+and wowschat-translator translates them with the selected engine (DeepL by default, GPT/Claude/Gemini optional) and returns the result.
 
 ```
 WoWs (TTaro Chat Mod)
@@ -26,7 +26,8 @@ WoWs (TTaro Chat Mod)
         └─ wowschat-translator
               ├─ DeepL API (default)
               ├─ OpenAI Responses API (optional GPT)
-              └─ Anthropic Messages API (optional Claude)
+              ├─ Anthropic Messages API (optional Claude)
+              └─ Google Generative Language API (optional Gemini)
 ```
 
 ## Requirements
@@ -36,6 +37,7 @@ WoWs (TTaro Chat Mod)
   - [DeepL API key](https://www.deepl.com/pro-api) (free plan is fine) — for `translation_engine: deepl` (default)
   - [OpenAI API key](https://platform.openai.com/api-keys) — for `translation_engine: gpt`
   - [Anthropic API key](https://console.anthropic.com/settings/keys) — for `translation_engine: claude`
+  - [Google AI (Gemini) API key](https://aistudio.google.com/app/apikey) — for `translation_engine: gemini`
 
 ## Acknowledgements
 

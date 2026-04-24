@@ -5,20 +5,20 @@
 World of Warships の戦闘中チャットをリアルタイムに翻訳するローカルツール。
 [WoWSChatTranslator](https://github.com/AndrewTaro/WoWSChatTranslator) の GUI なし移植版 + α。
 
-本家にはない拡張機能として、GPT / Claude モードでは調整次第でより柔軟な翻訳挙動を実現できる。
-GPT / Claude 翻訳は、プロンプトやモデル調整、API コスト管理を理解している人向けの任意オプション。
+本家にはない拡張機能として、GPT / Claude / Gemini モードでは調整次第でより柔軟な翻訳挙動を実現できる。
+GPT / Claude / Gemini 翻訳は、プロンプトやモデル調整、API コスト管理を理解している人向けの任意オプション。
 既定・推奨エンジンは本家と同じ DeepL。
 
 ## ハイライト
 
 - DeepL を軸にした安定・シンプルな運用
-- 本家にはない任意機能としての GPT / Claude エンジンによるプロンプト駆動の調整
+- 本家にはない任意機能としての GPT / Claude / Gemini エンジンによるプロンプト駆動の調整
 - ゲーム用語向けの passthrough / glossary / expand カスタマイズ
 
 ## 仕組み
 
 TTaro Chat Mod がチャットメッセージを `http://localhost:5000/wowschat/?text=...` へ送信し、
-wowschat-translator が選択されたエンジン（既定は DeepL、任意で GPT / Claude）で翻訳してレスポンスとして返す。
+wowschat-translator が選択されたエンジン（既定は DeepL、任意で GPT / Claude / Gemini）で翻訳してレスポンスとして返す。
 
 ```
 WoWs (TTaro Chat Mod)
@@ -26,7 +26,8 @@ WoWs (TTaro Chat Mod)
         └─ wowschat-translator
               ├─ DeepL API（既定）
               ├─ OpenAI Responses API（任意: GPT）
-              └─ Anthropic Messages API（任意: Claude）
+              ├─ Anthropic Messages API（任意: Claude）
+              └─ Google Generative Language API（任意: Gemini）
 ```
 
 ## 必要なもの
@@ -36,6 +37,7 @@ WoWs (TTaro Chat Mod)
   - [DeepL API キー](https://www.deepl.com/ja/pro-api)（無料プランで可）— `translation_engine: deepl`（既定）
   - [OpenAI API キー](https://platform.openai.com/api-keys) — `translation_engine: gpt`
   - [Anthropic API キー](https://console.anthropic.com/settings/keys) — `translation_engine: claude`
+  - [Google AI (Gemini) API キー](https://aistudio.google.com/app/apikey) — `translation_engine: gemini`
 
 ## 謝辞
 
