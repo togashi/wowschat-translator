@@ -51,9 +51,14 @@ type geminiPart struct {
 }
 
 type geminiGenerationConfig struct {
-	Temperature      float64 `json:"temperature"`
-	MaxOutputTokens  int     `json:"maxOutputTokens"`
-	ResponseMimeType string  `json:"responseMimeType,omitempty"`
+	Temperature      float64               `json:"temperature"`
+	MaxOutputTokens  int                   `json:"maxOutputTokens"`
+	ResponseMimeType string                `json:"responseMimeType,omitempty"`
+	ThinkingConfig   *geminiThinkingConfig `json:"thinkingConfig,omitempty"`
+}
+
+type geminiThinkingConfig struct {
+	ThinkingBudget int `json:"thinkingBudget"`
 }
 
 type geminiGenerateResponse struct {
@@ -64,6 +69,12 @@ type geminiGenerateResponse struct {
 		} `json:"content"`
 		FinishReason string `json:"finishReason"`
 	} `json:"candidates"`
+	UsageMetadata struct {
+		PromptTokenCount     int `json:"promptTokenCount"`
+		CandidatesTokenCount int `json:"candidatesTokenCount"`
+		ThoughtsTokenCount   int `json:"thoughtsTokenCount"`
+		TotalTokenCount      int `json:"totalTokenCount"`
+	} `json:"usageMetadata"`
 }
 
 // NewGeminiTranslator creates a GeminiTranslator.
@@ -159,8 +170,9 @@ func (t *GeminiTranslator) Translate(text, targetLang string) (string, error) {
 		},
 		GenerationConfig: geminiGenerationConfig{
 			Temperature:      t.temperature,
-			MaxOutputTokens:  256,
+			MaxOutputTokens:  512,
 			ResponseMimeType: "application/json",
+			ThinkingConfig:   &geminiThinkingConfig{ThinkingBudget: 0},
 		},
 	}
 	body, err := json.Marshal(reqBody)
@@ -186,25 +198,43 @@ func (t *GeminiTranslator) Translate(text, targetLang string) (string, error) {
 	statusCode = resp.StatusCode
 	t.debugf("generateContent status=%d", resp.StatusCode)
 
+	rawBody, readErr := io.ReadAll(resp.Body)
+	if readErr != nil {
+		return "", fmt.Errorf("Gemini response read: %w", readErr)
+	}
+
 	if resp.StatusCode != http.StatusOK {
-		data, _ := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("Gemini API status %d: %s", resp.StatusCode, strings.TrimSpace(string(data)))
+		return "", fmt.Errorf("Gemini API status %d: %s", resp.StatusCode, strings.TrimSpace(string(rawBody)))
 	}
 
 	var apiResp geminiGenerateResponse
-	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
+	if err := json.Unmarshal(rawBody, &apiResp); err != nil {
+		t.debugf("raw response body: %s", string(rawBody))
 		return "", fmt.Errorf("Gemini response: %w", err)
 	}
 
+	finishReason := ""
+	if len(apiResp.Candidates) > 0 {
+		finishReason = apiResp.Candidates[0].FinishReason
+	}
+	t.debugf("generateContent finish=%s prompt_tokens=%d output_tokens=%d thoughts_tokens=%d total_tokens=%d",
+		finishReason,
+		apiResp.UsageMetadata.PromptTokenCount,
+		apiResp.UsageMetadata.CandidatesTokenCount,
+		apiResp.UsageMetadata.ThoughtsTokenCount,
+		apiResp.UsageMetadata.TotalTokenCount,
+	)
+
 	responseText := strings.TrimSpace(extractGeminiOutputText(apiResp))
 	if responseText == "" {
-		t.debugf("generateContent output is empty")
+		t.debugf("generateContent output is empty; raw response body: %s", string(rawBody))
 		return "", nil
 	}
 
 	translationResult, err := parseTranslationResult(responseText)
 	if err != nil {
 		t.debugf("parse translation result failed: %v", err)
+		t.debugf("raw response body: %s", string(rawBody))
 		return "", err
 	}
 
