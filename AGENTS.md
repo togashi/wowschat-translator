@@ -7,7 +7,7 @@ This file captures repository-specific guidance for GPT-style coding agents.
 - Project: wowschat-translator (Go)
 - Purpose: Translate World of Warships in-game chat.
 - Default engine: DeepL
-- Optional advanced engines: GPT (OpenAI Responses API), Claude (Anthropic Messages API)
+- Optional advanced engines: GPT (OpenAI Responses API), Claude (Anthropic Messages API), Gemini (Google AI generateContent API)
 
 ## Core Architecture
 
@@ -18,6 +18,7 @@ This file captures repository-specific guidance for GPT-style coding agents.
 - DeepL implementation: internal/translator/deepl_translator.go
 - GPT implementation: internal/translator/gpt_translator.go
 - Claude implementation: internal/translator/claude_translator.go
+- Gemini implementation: internal/translator/gemini_translator.go
 - Shared prompt loader: internal/translator/prompt.go
 - Trace model: internal/translator/trace.go
 
@@ -28,12 +29,13 @@ This file captures repository-specific guidance for GPT-style coding agents.
 - Legacy DeepL key fallback: api_key
 - GPT config keys: openai_api_key, openai_model, openai_prompt_file, openai_temperature
 - Claude config keys: anthropic_api_key, anthropic_model, anthropic_prompt_file, anthropic_temperature
-- Supported engines: deepl, gpt, claude
+- Gemini config keys: gemini_api_key, gemini_model, gemini_prompt_file, gemini_temperature
+- Supported engines: deepl, gpt, claude, gemini
 
-## Prompt Behavior (GPT / Claude)
+## Prompt Behavior (GPT / Claude / Gemini)
 
 - Embedded default prompt file: internal/translator/prompts/system_prompt.txt (shared across engines)
-- External prompt override can be provided with openai_prompt_file (GPT) or anthropic_prompt_file (Claude)
+- External prompt override can be provided with openai_prompt_file (GPT), anthropic_prompt_file (Claude), or gemini_prompt_file (Gemini)
 - External prompt supports placeholders:
   - {{PASSTHROUGH}}
   - {{GLOSSARY}}
@@ -47,7 +49,7 @@ This file captures repository-specific guidance for GPT-style coding agents.
   - `RPF: *` (trailing `*`) — prefix match against the full input string start
   - `/pattern/` or `/pattern/flags` — regex match (Go regexp syntax)
 - Plain words use case-insensitive word-boundary matching by default.
-- Passthrough rules are cached in GPT and Claude translators.
+- Passthrough rules are cached in GPT, Claude, and Gemini translators.
 - Expand (`expand` config) rewrites abbreviations to full words before translation using `\b` word-boundary matching (case-insensitive). Applied before passthrough masking.
 - Processing order: expand → passthrough masking → LLM translation → restore masked segments.
 - Glossary entries are rendered in sorted key order for deterministic prompts.

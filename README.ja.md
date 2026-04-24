@@ -228,9 +228,58 @@ wowschat-translator.exe --translation-engine=claude --anthropic-api-key=your-ant
 
 プロンプトプレースホルダーは GPT モードと同様（`{{PASSTHROUGH}}`、`{{GLOSSARY}}`）。
 
+### 任意機能: Gemini 翻訳（上級者向け）
+
+`translation_engine: gemini` は、Google の Gemini を使ってモデルやプロンプトを自分で調整したい上級者向けの設定。
+
+注意点:
+
+- Google AI (Gemini) の API キーが必要。
+- モデル/temperature の調整と API 利用コスト管理は利用者側の責任。
+
+設定ファイル例:
+
+```yaml
+translation_engine: "gemini"
+gemini_api_key: "your-gemini-api-key"
+gemini_model: "gemini-2.5-flash"
+gemini_temperature: 0.2
+gemini_prompt_file: "prompts/my_gemini_system_prompt.txt" # 任意
+
+passthrough:
+      - gg
+      - /\b[A-Z]{2,}\b/
+
+expand:
+      cap: capture
+      torps: torpedoes
+
+glossary:
+      AP: armor-piercing
+      DD: destroyer
+```
+
+環境変数:
+
+```
+WOWSCHAT_TRANSLATION_ENGINE=gemini
+WOWSCHAT_GEMINI_API_KEY=your-gemini-api-key
+WOWSCHAT_GEMINI_MODEL=gemini-2.5-flash
+WOWSCHAT_GEMINI_TEMPERATURE=0.2
+WOWSCHAT_GEMINI_PROMPT_FILE=prompts/my_gemini_system_prompt.txt
+```
+
+コマンドライン引数:
+
+```
+wowschat-translator.exe --translation-engine=gemini --gemini-api-key=your-gemini-api-key --gemini-model=gemini-2.5-flash --gemini-temperature=0.2 --gemini-prompt-file=prompts/my_gemini_system_prompt.txt
+```
+
+プロンプトプレースホルダーは GPT モードと同様（`{{PASSTHROUGH}}`、`{{GLOSSARY}}`）。
+
 ### 翻訳先言語コード
 
-言語コードを指定する（大文字小文字は問わない）。形式は DeepL の規約に準拠しており、GPT / Claude エンジンではプロンプト経由で解釈される。
+言語コードを指定する（大文字小文字は問わない）。形式は DeepL の規約に準拠しており、GPT / Claude / Gemini エンジンではプロンプト経由で解釈される。
 
 | コード | 言語 |
 |--------|------|

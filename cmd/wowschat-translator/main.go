@@ -47,7 +47,7 @@ func main() {
 		apiKey       = flag.String("api-key", "", "DeepL API key")
 		targetLang   = flag.String("target-lang", "", "target language code (e.g. JA, EN-US)")
 		outputFmt    = flag.String("output-format", "", "translated output format (e.g. ({DetectedSourceLanguage}) {TranslatedText})")
-		engine          = flag.String("translation-engine", "", "translation engine: deepl, gpt, or claude")
+		engine          = flag.String("translation-engine", "", "translation engine: deepl, gpt, claude, or gemini")
 		openAIKey       = flag.String("openai-api-key", "", "OpenAI API key for GPT translation")
 		openAIModel     = flag.String("openai-model", "", "OpenAI model ID for GPT translation (e.g. gpt-5.4-mini)")
 		openAIPrompt    = flag.String("openai-prompt-file", "", "optional file path for GPT system prompt override")
@@ -56,6 +56,10 @@ func main() {
 		anthropicModel  = flag.String("anthropic-model", "", "Anthropic model ID for Claude translation (e.g. claude-haiku-4-5-20251001)")
 		anthropicPrompt = flag.String("anthropic-prompt-file", "", "optional file path for Claude system prompt override")
 		anthropicTemp   = flag.String("anthropic-temperature", "", "Anthropic sampling temperature for Claude translation (e.g. 0.2)")
+		geminiKey       = flag.String("gemini-api-key", "", "Google AI API key for Gemini translation")
+		geminiModel     = flag.String("gemini-model", "", "Gemini model ID for Gemini translation (e.g. gemini-2.5-flash)")
+		geminiPrompt    = flag.String("gemini-prompt-file", "", "optional file path for Gemini system prompt override")
+		geminiTemp      = flag.String("gemini-temperature", "", "Gemini sampling temperature for Gemini translation (e.g. 0.2)")
 		debug           = flag.String("debug", "", "enable verbose debug logging (true/false)")
 		traceLogFile = flag.String("trace-log-file", "", "path to JSONL trace log file; if set, trace logging is enabled")
 		initConfig   = flag.Bool("init-config", false, "create default config.yaml and exit")
@@ -102,6 +106,10 @@ func main() {
 		*anthropicModel,
 		*anthropicPrompt,
 		*anthropicTemp,
+		*geminiKey,
+		*geminiModel,
+		*geminiPrompt,
+		*geminiTemp,
 		*debug,
 		*traceLogFile,
 	)
@@ -149,8 +157,24 @@ func main() {
 			cfg.Expand,
 			cfg.Debug,
 		)
+	case "gemini":
+		if cfg.GeminiAPIKey == "" {
+			log.Fatal("Google AI API key is required for translation_engine=gemini.\n" +
+				"  Set via --gemini-api-key flag, WOWSCHAT_GEMINI_API_KEY env var, or gemini_api_key in config.yaml")
+		}
+		tr = translator.NewGeminiTranslator(
+			cfg.GeminiAPIKey,
+			cfg.GeminiModel,
+			cfg.GeminiPromptFile,
+			cfg.GeminiTemperature,
+			cfg.OutputFormat,
+			cfg.Passthrough,
+			cfg.Glossary,
+			cfg.Expand,
+			cfg.Debug,
+		)
 	default:
-		log.Fatalf("unsupported translation_engine %q (valid: deepl, gpt, claude)", cfg.TranslationEngine)
+		log.Fatalf("unsupported translation_engine %q (valid: deepl, gpt, claude, gemini)", cfg.TranslationEngine)
 	}
 
 	log.Printf("target language: %s", cfg.TargetLang)
