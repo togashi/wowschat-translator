@@ -32,7 +32,7 @@ This file captures repository-specific guidance for GPT-style coding agents.
 
 ## Prompt Behavior (GPT / Claude)
 
-- Embedded default prompt file: internal/translator/prompts/gpt_system_prompt.txt (shared by GPT and Claude)
+- Embedded default prompt file: internal/translator/prompts/system_prompt.txt (shared across engines)
 - External prompt override can be provided with openai_prompt_file (GPT) or anthropic_prompt_file (Claude)
 - External prompt supports placeholders:
   - {{PASSTHROUGH}}

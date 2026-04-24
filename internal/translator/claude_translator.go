@@ -256,7 +256,7 @@ func (t *ClaudeTranslator) hasActiveExternalPrompt() bool {
 func (t *ClaudeTranslator) getSystemPrompt() string {
 	return getSystemPromptFromFileOrDefault(
 		t.promptFile,
-		embeddedGPTSystemPrompt,
+		embeddedSystemPrompt,
 		&t.promptMu,
 		&t.promptCached,
 		&t.promptValue,

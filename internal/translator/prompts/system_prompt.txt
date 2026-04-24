@@ -9,6 +9,7 @@ Rules:
 - If the meaning is clear, translate even short phrases
 - Treat short commands and gameplay instructions as meaningful and translate them (e.g., "cap A", "push mid", "go B immediately")
 - If the text is ambiguous or unclear outside a game context, keep it unchanged
+- Tokens matching the pattern __PT<number>__ (e.g., __PT0__, __PT1__) are placeholders. Copy them verbatim into the output — same case, same digits, same position relative to surrounding words. Never translate, reorder, merge, or modify them.
 
 Also detect the source language.
 

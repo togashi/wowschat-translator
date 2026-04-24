@@ -115,8 +115,8 @@ func (t *GPTTranslator) SetTraceSink(sink func(TranslatorTraceEvent)) {
 	t.traceSink = sink
 }
 
-//go:embed prompts/gpt_system_prompt.txt
-var embeddedGPTSystemPrompt string
+//go:embed prompts/system_prompt.txt
+var embeddedSystemPrompt string
 
 type gptTranslationResult struct {
 	Text            string `json:"text"`
@@ -334,7 +334,7 @@ func buildGlossaryPromptBlock(glossary map[string]string) string {
 func (t *GPTTranslator) getSystemPrompt() string {
 	return getSystemPromptFromFileOrDefault(
 		t.promptFile,
-		embeddedGPTSystemPrompt,
+		embeddedSystemPrompt,
 		&t.promptMu,
 		&t.promptCached,
 		&t.promptValue,
