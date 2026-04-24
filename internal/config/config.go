@@ -30,6 +30,10 @@ type Config struct {
 	AnthropicModel         string            `yaml:"anthropic_model"`
 	AnthropicPromptFile    string            `yaml:"anthropic_prompt_file"`
 	AnthropicTemperature   float64           `yaml:"anthropic_temperature"`
+	GeminiAPIKey           string            `yaml:"gemini_api_key"`
+	GeminiModel            string            `yaml:"gemini_model"`
+	GeminiPromptFile       string            `yaml:"gemini_prompt_file"`
+	GeminiTemperature      float64           `yaml:"gemini_temperature"`
 	Debug                  bool              `yaml:"debug"`
 	TraceLogFile           string            `yaml:"trace_log_file"`
 }
@@ -101,6 +105,10 @@ func Load(
 	anthropicModel,
 	anthropicPromptFile,
 	anthropicTemperature,
+	geminiAPIKey,
+	geminiModel,
+	geminiPromptFile,
+	geminiTemperature,
 	debug,
 	traceLogFile string,
 ) (*Config, error) {
@@ -114,6 +122,8 @@ func Load(
 		OpenAITemperature:    0.2,
 		AnthropicModel:       "claude-haiku-4-5-20251001",
 		AnthropicTemperature: 0.2,
+		GeminiModel:          "gemini-2.5-flash",
+		GeminiTemperature:    0.2,
 	}
 
 	path := resolveConfigPath(configFile)
@@ -173,6 +183,22 @@ func Load(
 		}
 		cfg.AnthropicTemperature = temperature
 	}
+	if v := os.Getenv("WOWSCHAT_GEMINI_API_KEY"); v != "" {
+		cfg.GeminiAPIKey = v
+	}
+	if v := os.Getenv("WOWSCHAT_GEMINI_MODEL"); v != "" {
+		cfg.GeminiModel = v
+	}
+	if v := os.Getenv("WOWSCHAT_GEMINI_PROMPT_FILE"); v != "" {
+		cfg.GeminiPromptFile = v
+	}
+	if v := os.Getenv("WOWSCHAT_GEMINI_TEMPERATURE"); v != "" {
+		temperature, err := strconv.ParseFloat(v, 64)
+		if err != nil {
+			return nil, fmt.Errorf("invalid WOWSCHAT_GEMINI_TEMPERATURE %q: %w", v, err)
+		}
+		cfg.GeminiTemperature = temperature
+	}
 	if v := os.Getenv("WOWSCHAT_DEBUG"); v != "" {
 		debugValue, err := strconv.ParseBool(v)
 		if err != nil {
@@ -227,6 +253,22 @@ func Load(
 			return nil, fmt.Errorf("invalid anthropic_temperature %q: %w", anthropicTemperature, err)
 		}
 		cfg.AnthropicTemperature = temperature
+	}
+	if geminiAPIKey != "" {
+		cfg.GeminiAPIKey = geminiAPIKey
+	}
+	if geminiModel != "" {
+		cfg.GeminiModel = geminiModel
+	}
+	if geminiPromptFile != "" {
+		cfg.GeminiPromptFile = geminiPromptFile
+	}
+	if geminiTemperature != "" {
+		temperature, err := strconv.ParseFloat(geminiTemperature, 64)
+		if err != nil {
+			return nil, fmt.Errorf("invalid gemini_temperature %q: %w", geminiTemperature, err)
+		}
+		cfg.GeminiTemperature = temperature
 	}
 	if debug != "" {
 		debugValue, err := strconv.ParseBool(debug)

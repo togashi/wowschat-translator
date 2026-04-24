@@ -229,9 +229,58 @@ wowschat-translator.exe --translation-engine=claude --anthropic-api-key=your-ant
 
 Prompt placeholders work the same as GPT mode (`{{PASSTHROUGH}}`, `{{GLOSSARY}}`).
 
+### Optional: Gemini translation (advanced)
+
+`translation_engine: gemini` is intended for advanced users who want to tune model/prompt behavior using Google's Gemini.
+
+Notes:
+
+- You need your own Google AI (Gemini) API key.
+- You are responsible for model/temperature tuning and API usage cost.
+
+Config file example:
+
+```yaml
+translation_engine: "gemini"
+gemini_api_key: "your-gemini-api-key"
+gemini_model: "gemini-2.5-flash"
+gemini_temperature: 0.2
+gemini_prompt_file: "prompts/my_gemini_system_prompt.txt" # optional
+
+passthrough:
+      - gg
+      - /\b[A-Z]{2,}\b/
+
+expand:
+      cap: capture
+      torps: torpedoes
+
+glossary:
+      AP: armor-piercing
+      DD: destroyer
+```
+
+Environment variables:
+
+```
+WOWSCHAT_TRANSLATION_ENGINE=gemini
+WOWSCHAT_GEMINI_API_KEY=your-gemini-api-key
+WOWSCHAT_GEMINI_MODEL=gemini-2.5-flash
+WOWSCHAT_GEMINI_TEMPERATURE=0.2
+WOWSCHAT_GEMINI_PROMPT_FILE=prompts/my_gemini_system_prompt.txt
+```
+
+Command-line flags:
+
+```
+wowschat-translator.exe --translation-engine=gemini --gemini-api-key=your-gemini-api-key --gemini-model=gemini-2.5-flash --gemini-temperature=0.2 --gemini-prompt-file=prompts/my_gemini_system_prompt.txt
+```
+
+Prompt placeholders work the same as GPT mode (`{{PASSTHROUGH}}`, `{{GLOSSARY}}`).
+
 ### Target language codes
 
-Specify a language code (case-insensitive). The format follows the DeepL convention; GPT and Claude engines interpret these codes via prompt.
+Specify a language code (case-insensitive). The format follows the DeepL convention; GPT, Claude, and Gemini engines interpret these codes via prompt.
 
 | Code | Language |
 |------|----------|
