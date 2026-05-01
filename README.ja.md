@@ -55,7 +55,7 @@ TTaro 氏に感謝します。
 ### ビルドする場合
 
 ```bash
-GOOS=windows GOARCH=amd64 go build -o wowschat-translator.exe ./cmd/wowschat-translator/
+GOOS=windows GOARCH=amd64 go build -o wowschat-translator.exe .
 ```
 
 ## 設定
@@ -111,7 +111,7 @@ wowschat-translator.exe --api-key=your-deepl-api-key --target-lang=JA --output-f
 wowschat-translator.exe --dump-config
 ```
 
-`--dump-config` は、最初に読み込んだ設定ファイルのフルパスを表示し、その後に有効設定を YAML でダンプする。
+`--dump-config` は、最初に読み込んだ設定ファイルのフルパスを YAML コメント行として表示し、その後に有効設定を YAML でダンプする。
 ダンプ出力では API キーはマスクされる。
 
 **優先順位:** コマンドライン引数 > 環境変数 > 設定ファイル

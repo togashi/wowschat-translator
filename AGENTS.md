@@ -11,7 +11,7 @@ This file captures repository-specific guidance for GPT-style coding agents.
 
 ## Core Architecture
 
-- Entry point: cmd/wowschat-translator/main.go
+- Entry point: main.go
 - Config loader: internal/config/config.go
 - Server: internal/server/server.go
 - Translator interface + shared formatting: internal/translator/translator.go

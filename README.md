@@ -54,7 +54,7 @@ Download the release package from [Releases](../../releases).
 ### Building from source
 
 ```bash
-GOOS=windows GOARCH=amd64 go build -o wowschat-translator.exe ./cmd/wowschat-translator/
+GOOS=windows GOARCH=amd64 go build -o wowschat-translator.exe .
 ```
 
 ## Configuration
@@ -112,7 +112,7 @@ To inspect the effective loaded/resolved config and exit:
 wowschat-translator.exe --dump-config
 ```
 
-`--dump-config` prints the loaded config file full path first, then dumps effective config as YAML.
+`--dump-config` prints the loaded config file full path first as a YAML comment line, then dumps effective config as YAML.
 API keys are masked in dump output.
 
 **Priority:** command-line flags > environment variables > config file

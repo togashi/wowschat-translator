@@ -14,6 +14,6 @@ New-Item -ItemType Directory -Path "dist" -Force | Out-Null
 $env:GOOS = "windows"
 $env:GOARCH = $GoArch
 
-go build -trimpath -ldflags "-s -w" -o $Output ./cmd/wowschat-translator/
+go build -trimpath -ldflags "-s -w" -o $Output .
 
 Write-Host "Build succeeded: $Output"

@@ -14,7 +14,7 @@ if not exist "dist" mkdir "dist"
 
 set "GOOS=windows"
 set "GOARCH=amd64"
-go build -trimpath -ldflags "-s -w" -o "dist\wowschat-translator-windows-amd64.exe" ./cmd/wowschat-translator/
+go build -trimpath -ldflags "-s -w" -o "dist\wowschat-translator-windows-amd64.exe" .
 if errorlevel 1 (
   echo Build failed.
   popd >nul
