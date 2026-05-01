@@ -69,7 +69,12 @@ GOOS=windows GOARCH=amd64 go build -o wowschat-translator.exe ./cmd/wowschat-tra
 wowschat-translator.exe --init-config
 ```
 
-生成先は exe と同じディレクトリ（`--config` 指定時はそのパス）。
+生成先は `--config` 指定時はそのパス。未指定時は次の順で探索・生成される。
+
+1. Windows: `%APPDATA%\\wowschat-translator\\config.yaml` / Linux・macOS: `~/.config/wowschat-translator/config.yaml`
+2. `$(pwd)/config.yaml`
+
+どちらにも存在しない場合は、1 の場所に既定設定を自動生成する。
 
 最小設定例:
 
@@ -81,7 +86,10 @@ trace_log_file: "logs/trace.jsonl"
 ```
 
 `trace_log_file` は任意項目。設定した場合は translator のトレースイベントを JSON Lines で追記する。
-相対パスは実行時のカレントディレクトリ基準で解決される。
+相対パスは次を基準に解決される。
+
+1. Linux: `~/.local/state/wowschat-translator`
+2. Windows: `%LOCALAPPDATA%\\wowschat-translator`
 
 ### 環境変数
 
@@ -98,6 +106,11 @@ wowschat-translator.exe --api-key=your-deepl-api-key --target-lang=JA --output-f
 ```
 
 **優先順位:** コマンドライン引数 > 環境変数 > 設定ファイル
+
+`openai_prompt_file` / `anthropic_prompt_file` / `gemini_prompt_file` の相対パスは次を基準に解決される。
+
+1. Linux: `~/.config/wowschat-translator`
+2. Windows: `%APPDATA%\\wowschat-translator`
 
 ### 出力フォーマットタグ
 
@@ -326,7 +339,7 @@ wowschat-translator.exe uninstall
 ```
 
 サービス登録後は Windows のサービス管理（`services.msc`）からも操作できる。
-サービスとして動作する場合、`config.yaml` は **exe と同じディレクトリ** に置く必要がある。
+サービスとして `--config` 未指定で動作する場合、`%APPDATA%\\wowschat-translator\\config.yaml` を先に探索し、次にサービスの作業ディレクトリ内 `config.yaml` を探索する。
 
 ## DeepL API キーについて
 

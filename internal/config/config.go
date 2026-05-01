@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 
@@ -12,30 +13,30 @@ import (
 )
 
 type Config struct {
-	DeepLAPIKey       string            `yaml:"deepl_api_key"`
-	LegacyAPIKey      string            `yaml:"api_key"`
-	TargetLang        string            `yaml:"target_lang"`
-	OutputFormat      string            `yaml:"output_format"`
-	Passthrough       []string          `yaml:"passthrough"`
-	Glossary          map[string]string `yaml:"glossary"`
-	Expand            map[string]string `yaml:"expand"`
-	ListenPort        int               `yaml:"listen_port"`
-	EndpointPath      string            `yaml:"endpoint_path"`
-	TranslationEngine string            `yaml:"translation_engine"`
-	OpenAIAPIKey           string            `yaml:"openai_api_key"`
-	OpenAIModel            string            `yaml:"openai_model"`
-	OpenAIPromptFile       string            `yaml:"openai_prompt_file"`
-	OpenAITemperature      float64           `yaml:"openai_temperature"`
-	AnthropicAPIKey        string            `yaml:"anthropic_api_key"`
-	AnthropicModel         string            `yaml:"anthropic_model"`
-	AnthropicPromptFile    string            `yaml:"anthropic_prompt_file"`
-	AnthropicTemperature   float64           `yaml:"anthropic_temperature"`
-	GeminiAPIKey           string            `yaml:"gemini_api_key"`
-	GeminiModel            string            `yaml:"gemini_model"`
-	GeminiPromptFile       string            `yaml:"gemini_prompt_file"`
-	GeminiTemperature      float64           `yaml:"gemini_temperature"`
-	Debug                  bool              `yaml:"debug"`
-	TraceLogFile           string            `yaml:"trace_log_file"`
+	DeepLAPIKey          string            `yaml:"deepl_api_key"`
+	LegacyAPIKey         string            `yaml:"api_key"`
+	TargetLang           string            `yaml:"target_lang"`
+	OutputFormat         string            `yaml:"output_format"`
+	Passthrough          []string          `yaml:"passthrough"`
+	Glossary             map[string]string `yaml:"glossary"`
+	Expand               map[string]string `yaml:"expand"`
+	ListenPort           int               `yaml:"listen_port"`
+	EndpointPath         string            `yaml:"endpoint_path"`
+	TranslationEngine    string            `yaml:"translation_engine"`
+	OpenAIAPIKey         string            `yaml:"openai_api_key"`
+	OpenAIModel          string            `yaml:"openai_model"`
+	OpenAIPromptFile     string            `yaml:"openai_prompt_file"`
+	OpenAITemperature    float64           `yaml:"openai_temperature"`
+	AnthropicAPIKey      string            `yaml:"anthropic_api_key"`
+	AnthropicModel       string            `yaml:"anthropic_model"`
+	AnthropicPromptFile  string            `yaml:"anthropic_prompt_file"`
+	AnthropicTemperature float64           `yaml:"anthropic_temperature"`
+	GeminiAPIKey         string            `yaml:"gemini_api_key"`
+	GeminiModel          string            `yaml:"gemini_model"`
+	GeminiPromptFile     string            `yaml:"gemini_prompt_file"`
+	GeminiTemperature    float64           `yaml:"gemini_temperature"`
+	Debug                bool              `yaml:"debug"`
+	TraceLogFile         string            `yaml:"trace_log_file"`
 }
 
 //go:embed default_config.yaml
@@ -44,20 +45,17 @@ var embeddedDefaultConfigYAML string
 // EnsureDefaultConfig creates a default config file when it does not exist.
 // It returns the resolved path and whether a new file was created.
 func EnsureDefaultConfig(configFile string) (string, bool, error) {
-	path := resolveConfigPath(configFile)
-	if strings.TrimSpace(configFile) == "" {
-		path = defaultConfigPath()
+	paths := configSearchPaths(configFile)
+
+	for _, path := range paths {
+		if _, err := os.Stat(path); err == nil {
+			return path, false, nil
+		} else if !os.IsNotExist(err) {
+			return path, false, fmt.Errorf("stat %s: %w", path, err)
+		}
 	}
 
-	if _, err := os.Stat(path); err == nil {
-		return path, false, nil
-	} else if !os.IsNotExist(err) {
-		return path, false, fmt.Errorf("stat %s: %w", path, err)
-	}
-
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		return path, false, fmt.Errorf("create config dir %s: %w", filepath.Dir(path), err)
-	}
+	path := paths[0]
 
 	content := strings.TrimSpace(embeddedDefaultConfigYAML)
 	if content == "" {
@@ -65,28 +63,29 @@ func EnsureDefaultConfig(configFile string) (string, bool, error) {
 	}
 	content += "\n"
 
-	writeErr := os.WriteFile(path, []byte(content), 0o644)
-	if writeErr == nil {
-		return path, true, nil
+	var lastErr error
+	for _, candidate := range paths {
+		if err := os.MkdirAll(filepath.Dir(candidate), 0o755); err != nil {
+			lastErr = fmt.Errorf("create config dir %s: %w", filepath.Dir(candidate), err)
+			if strings.TrimSpace(configFile) != "" {
+				return candidate, false, lastErr
+			}
+			continue
+		}
+		if err := os.WriteFile(candidate, []byte(content), 0o644); err == nil {
+			return candidate, true, nil
+		} else {
+			lastErr = fmt.Errorf("write %s: %w", candidate, err)
+			if strings.TrimSpace(configFile) != "" {
+				return candidate, false, lastErr
+			}
+		}
 	}
 
-	if strings.TrimSpace(configFile) != "" {
-		return path, false, fmt.Errorf("write %s: %w", path, writeErr)
+	if lastErr != nil {
+		return path, false, lastErr
 	}
-
-	fallback := "config.yaml"
-	if filepath.Clean(fallback) == filepath.Clean(path) {
-		return path, false, fmt.Errorf("write %s: %w", path, writeErr)
-	}
-	if _, statErr := os.Stat(fallback); statErr == nil {
-		return fallback, false, nil
-	} else if !os.IsNotExist(statErr) {
-		return fallback, false, fmt.Errorf("stat %s: %w", fallback, statErr)
-	}
-	if writeErr := os.WriteFile(fallback, []byte(content), 0o644); writeErr != nil {
-		return path, false, fmt.Errorf("write %s: %w", path, writeErr)
-	}
-	return fallback, true, nil
+	return path, false, fmt.Errorf("failed to create default config")
 }
 
 // Load builds Config with priority: CLI args > env vars > config file > defaults.
@@ -113,11 +112,11 @@ func Load(
 	traceLogFile string,
 ) (*Config, error) {
 	cfg := &Config{
-		TargetLang:        "JA",
-		OutputFormat:      "({DetectedSourceLanguage}) {TranslatedText}",
-		TranslationEngine: "deepl",
-		ListenPort:        5000,
-		EndpointPath:      "/wowschat/",
+		TargetLang:           "JA",
+		OutputFormat:         "({DetectedSourceLanguage}) {TranslatedText}",
+		TranslationEngine:    "deepl",
+		ListenPort:           5000,
+		EndpointPath:         "/wowschat/",
 		OpenAIModel:          "gpt-5.4-mini",
 		OpenAITemperature:    0.2,
 		AnthropicModel:       "claude-haiku-4-5-20251001",
@@ -280,26 +279,121 @@ func Load(
 	if traceLogFile != "" {
 		cfg.TraceLogFile = traceLogFile
 	}
+	resolvePromptFilePaths(cfg)
+	cfg.TraceLogFile = resolveTraceLogFilePath(cfg.TraceLogFile)
 
 	cfg.TargetLang = strings.ToUpper(cfg.TargetLang)
 	cfg.TranslationEngine = strings.ToLower(cfg.TranslationEngine)
 	return cfg, nil
 }
 
-func resolveConfigPath(explicit string) string {
-	if explicit != "" {
-		return explicit
-	}
-	candidate := defaultConfigPath()
-	if _, err := os.Stat(candidate); err == nil {
-		return candidate
-	}
-	return "config.yaml"
+func resolvePromptFilePaths(cfg *Config) {
+	cfg.OpenAIPromptFile = resolvePromptFilePath(cfg.OpenAIPromptFile)
+	cfg.AnthropicPromptFile = resolvePromptFilePath(cfg.AnthropicPromptFile)
+	cfg.GeminiPromptFile = resolvePromptFilePath(cfg.GeminiPromptFile)
 }
 
-func defaultConfigPath() string {
-	if exe, err := os.Executable(); err == nil {
-		return filepath.Join(filepath.Dir(exe), "config.yaml")
+func resolvePromptFilePath(path string) string {
+	path = strings.TrimSpace(path)
+	if path == "" || filepath.IsAbs(path) {
+		return path
 	}
-	return "config.yaml"
+
+	if base := configBaseDir(); base != "" {
+		return filepath.Join(base, path)
+	}
+
+	return path
+}
+
+func resolveTraceLogFilePath(path string) string {
+	path = strings.TrimSpace(path)
+	if path == "" || filepath.IsAbs(path) {
+		return path
+	}
+
+	if base := traceLogBaseDir(); base != "" {
+		return filepath.Join(base, path)
+	}
+
+	return path
+}
+
+func traceLogBaseDir() string {
+	switch runtime.GOOS {
+	case "linux":
+		home, err := os.UserHomeDir()
+		if err != nil || strings.TrimSpace(home) == "" {
+			return ""
+		}
+		return filepath.Join(home, ".local", "state", "wowschat-translator")
+	case "windows":
+		localAppData := strings.TrimSpace(os.Getenv("LOCALAPPDATA"))
+		if localAppData == "" {
+			cacheDir, err := os.UserCacheDir()
+			if err == nil {
+				localAppData = strings.TrimSpace(cacheDir)
+			}
+		}
+		if localAppData == "" {
+			return ""
+		}
+		return filepath.Join(localAppData, "wowschat-translator")
+	default:
+		return ""
+	}
+}
+
+func resolveConfigPath(explicit string) string {
+	paths := configSearchPaths(explicit)
+	for _, path := range paths {
+		if _, err := os.Stat(path); err == nil {
+			return path
+		}
+	}
+	return paths[0]
+}
+
+func configSearchPaths(explicit string) []string {
+	if strings.TrimSpace(explicit) != "" {
+		return []string{explicit}
+	}
+	return defaultConfigCandidates()
+}
+
+func defaultConfigCandidates() []string {
+	seen := make(map[string]struct{})
+	paths := make([]string, 0, 2)
+
+	add := func(path string) {
+		if path == "" {
+			return
+		}
+		clean := filepath.Clean(path)
+		if _, ok := seen[clean]; ok {
+			return
+		}
+		seen[clean] = struct{}{}
+		paths = append(paths, clean)
+	}
+
+	if base := configBaseDir(); base != "" {
+		add(filepath.Join(base, "config.yaml"))
+	}
+	if wd, err := os.Getwd(); err == nil {
+		add(filepath.Join(wd, "config.yaml"))
+	}
+	if len(paths) == 0 {
+		add("config.yaml")
+	}
+
+	return paths
+}
+
+func configBaseDir() string {
+	cfgDir, err := os.UserConfigDir()
+	if err != nil || strings.TrimSpace(cfgDir) == "" {
+		return ""
+	}
+	return filepath.Join(cfgDir, "wowschat-translator")
 }

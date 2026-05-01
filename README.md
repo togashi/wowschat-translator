@@ -68,7 +68,14 @@ You can also generate it manually:
 wowschat-translator.exe --init-config
 ```
 
-The generated file is created next to the executable (or at `--config` path when provided).
+When `--config` is specified, the generated file is created at that path.
+
+When `--config` is not specified, config is searched in this order:
+
+1. `%APPDATA%\\wowschat-translator\\config.yaml` on Windows, or `~/.config/wowschat-translator/config.yaml` on Linux/macOS
+2. `$(pwd)/config.yaml`
+
+If no file exists in those locations, a default config is auto-created at the first location.
 
 Minimal example:
 
@@ -80,7 +87,10 @@ trace_log_file: "logs/trace.jsonl"
 ```
 
 `trace_log_file` is optional. If set, translator trace events are appended as JSON Lines.
-Relative paths are resolved from the runtime working directory.
+Relative paths are resolved to:
+
+1. Linux: `~/.local/state/wowschat-translator`
+2. Windows: `%LOCALAPPDATA%\\wowschat-translator`
 
 ### Environment variables
 
@@ -97,6 +107,11 @@ wowschat-translator.exe --api-key=your-deepl-api-key --target-lang=JA --output-f
 ```
 
 **Priority:** command-line flags > environment variables > config file
+
+For `openai_prompt_file` / `anthropic_prompt_file` / `gemini_prompt_file`, relative paths are resolved to:
+
+1. Linux: `~/.config/wowschat-translator`
+2. Windows: `%APPDATA%\\wowschat-translator`
 
 ### Output format tags
 
@@ -327,7 +342,7 @@ wowschat-translator.exe uninstall
 ```
 
 Once installed, you can also manage it from Windows Services (`services.msc`).
-When running as a service, `config.yaml` must be in the **same directory as the exe**.
+When running as a service without `--config`, it searches `%APPDATA%\\wowschat-translator\\config.yaml` first, then the service working directory's `config.yaml`.
 
 ## DeepL API key notes
 

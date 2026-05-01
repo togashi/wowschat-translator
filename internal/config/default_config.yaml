@@ -8,7 +8,7 @@ deepl_api_key: "your-deepl-api-key-here"
 # anthropic_model: "claude-haiku-4-5-20251001"
 # gemini_api_key: ""
 # gemini_model: "gemini-2.5-flash"
-# trace_log_file: "logs/trace.jsonl" # relative path is resolved from runtime working directory
+# trace_log_file: "logs/trace.jsonl" # relative path base: Linux ~/.local/state/wowschat-translator, Windows %LOCALAPPDATA%\\wowschat-translator
 # output_format: "({DetectedSourceLanguage}) {TranslatedText}"
 passthrough:
   - gg

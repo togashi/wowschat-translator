@@ -43,10 +43,10 @@ func (p *program) Stop(_ service.Service) error {
 
 func main() {
 	var (
-		configFile   = flag.String("config", "", "path to config file (default: config.yaml next to executable)")
-		apiKey       = flag.String("api-key", "", "DeepL API key")
-		targetLang   = flag.String("target-lang", "", "target language code (e.g. JA, EN-US)")
-		outputFmt    = flag.String("output-format", "", "translated output format (e.g. ({DetectedSourceLanguage}) {TranslatedText})")
+		configFile      = flag.String("config", "", "path to config file (default search: user config dir then current directory)")
+		apiKey          = flag.String("api-key", "", "DeepL API key")
+		targetLang      = flag.String("target-lang", "", "target language code (e.g. JA, EN-US)")
+		outputFmt       = flag.String("output-format", "", "translated output format (e.g. ({DetectedSourceLanguage}) {TranslatedText})")
 		engine          = flag.String("translation-engine", "", "translation engine: deepl, gpt, claude, or gemini")
 		openAIKey       = flag.String("openai-api-key", "", "OpenAI API key for GPT translation")
 		openAIModel     = flag.String("openai-model", "", "OpenAI model ID for GPT translation (e.g. gpt-5.4-mini)")
@@ -61,8 +61,8 @@ func main() {
 		geminiPrompt    = flag.String("gemini-prompt-file", "", "optional file path for Gemini system prompt override")
 		geminiTemp      = flag.String("gemini-temperature", "", "Gemini sampling temperature for Gemini translation (e.g. 0.2)")
 		debug           = flag.String("debug", "", "enable verbose debug logging (true/false)")
-		traceLogFile = flag.String("trace-log-file", "", "path to JSONL trace log file; if set, trace logging is enabled")
-		initConfig   = flag.Bool("init-config", false, "create default config.yaml and exit")
+		traceLogFile    = flag.String("trace-log-file", "", "path to JSONL trace log file; if set, trace logging is enabled")
+		initConfig      = flag.Bool("init-config", false, "create default config.yaml and exit")
 	)
 	flag.Parse()
 
