@@ -1,5 +1,7 @@
 /wowschat-translator
+dist/
 config.yaml
 *.exe
 *.jsonl
 .claude/
+scripts/install.sh

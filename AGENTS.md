@@ -26,7 +26,6 @@ This file captures repository-specific guidance for GPT-style coding agents.
 
 - Priority: CLI flags > environment variables > config file > defaults
 - Primary DeepL key: deepl_api_key
-- Legacy DeepL key fallback: api_key
 - GPT config keys: openai_api_key, openai_model, openai_prompt_file, openai_temperature
 - Claude config keys: anthropic_api_key, anthropic_model, anthropic_prompt_file, anthropic_temperature
 - Gemini config keys: gemini_api_key, gemini_model, gemini_prompt_file, gemini_temperature

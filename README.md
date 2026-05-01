@@ -80,7 +80,7 @@ If no file exists in those locations, a default config is auto-created at the fi
 Minimal example:
 
 ```yaml
-api_key: "your-deepl-api-key"
+deepl_api_key: "your-deepl-api-key"
 target_lang: "JA"
 output_format: "({DetectedSourceLanguage}) {TranslatedText}"
 trace_log_file: "logs/trace.jsonl"
@@ -105,6 +105,15 @@ WOWSCHAT_OUTPUT_FORMAT=({DetectedSourceLanguage}) {TranslatedText}
 ```
 wowschat-translator.exe --api-key=your-deepl-api-key --target-lang=JA --output-format="({DetectedSourceLanguage}) {TranslatedText}"
 ```
+
+To inspect the effective loaded/resolved config and exit:
+
+```
+wowschat-translator.exe --dump-config
+```
+
+`--dump-config` prints the loaded config file full path first, then dumps effective config as YAML.
+API keys are masked in dump output.
 
 **Priority:** command-line flags > environment variables > config file
 

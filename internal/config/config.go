@@ -14,7 +14,6 @@ import (
 
 type Config struct {
 	DeepLAPIKey          string            `yaml:"deepl_api_key"`
-	LegacyAPIKey         string            `yaml:"api_key"`
 	TargetLang           string            `yaml:"target_lang"`
 	OutputFormat         string            `yaml:"output_format"`
 	Passthrough          []string          `yaml:"passthrough"`
@@ -130,9 +129,6 @@ func Load(
 	if data, err := os.ReadFile(path); err == nil {
 		if err := yaml.Unmarshal(data, cfg); err != nil {
 			return nil, fmt.Errorf("parse %s: %w", path, err)
-		}
-		if cfg.DeepLAPIKey == "" && cfg.LegacyAPIKey != "" {
-			cfg.DeepLAPIKey = cfg.LegacyAPIKey
 		}
 	} else if configFile != "" {
 		return nil, fmt.Errorf("read %s: %w", path, err)
@@ -352,6 +348,12 @@ func resolveConfigPath(explicit string) string {
 		}
 	}
 	return paths[0]
+}
+
+// ResolveConfigPath returns the config path selected by the default search rules
+// (or an explicit path if provided).
+func ResolveConfigPath(explicit string) string {
+	return resolveConfigPath(explicit)
 }
 
 func configSearchPaths(explicit string) []string {

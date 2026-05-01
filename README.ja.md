@@ -79,7 +79,7 @@ wowschat-translator.exe --init-config
 最小設定例:
 
 ```yaml
-api_key: "your-deepl-api-key"
+deepl_api_key: "your-deepl-api-key"
 target_lang: "JA"
 output_format: "({DetectedSourceLanguage}) {TranslatedText}"
 trace_log_file: "logs/trace.jsonl"
@@ -104,6 +104,15 @@ WOWSCHAT_OUTPUT_FORMAT=({DetectedSourceLanguage}) {TranslatedText}
 ```
 wowschat-translator.exe --api-key=your-deepl-api-key --target-lang=JA --output-format="({DetectedSourceLanguage}) {TranslatedText}"
 ```
+
+読み込み後・解決後の有効設定を確認して終了する場合:
+
+```
+wowschat-translator.exe --dump-config
+```
+
+`--dump-config` は、最初に読み込んだ設定ファイルのフルパスを表示し、その後に有効設定を YAML でダンプする。
+ダンプ出力では API キーはマスクされる。
 
 **優先順位:** コマンドライン引数 > 環境変数 > 設定ファイル
 

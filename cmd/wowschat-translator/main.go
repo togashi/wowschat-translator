@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -16,6 +17,7 @@ import (
 	"github.com/togashi/wowschat-translator/internal/config"
 	"github.com/togashi/wowschat-translator/internal/server"
 	"github.com/togashi/wowschat-translator/internal/translator"
+	"gopkg.in/yaml.v3"
 )
 
 var svcConfig = &service.Config{
@@ -63,6 +65,7 @@ func main() {
 		debug           = flag.String("debug", "", "enable verbose debug logging (true/false)")
 		traceLogFile    = flag.String("trace-log-file", "", "path to JSONL trace log file; if set, trace logging is enabled")
 		initConfig      = flag.Bool("init-config", false, "create default config.yaml and exit")
+		dumpConfig      = flag.Bool("dump-config", false, "dump loaded and resolved config as YAML (with masked API keys), then exit")
 	)
 	flag.Parse()
 
@@ -92,6 +95,8 @@ func main() {
 		log.Printf("edit API key settings in config.yaml and run again")
 	}
 
+	resolvedConfigPath := config.ResolveConfigPath(*configFile)
+
 	cfg, err := config.Load(
 		*configFile,
 		*apiKey,
@@ -117,12 +122,32 @@ func main() {
 		log.Fatalf("config: %v", err)
 	}
 
+	if *dumpConfig {
+		if absPath, absErr := filepath.Abs(resolvedConfigPath); absErr == nil {
+			resolvedConfigPath = absPath
+		}
+		if _, err := fmt.Fprintf(os.Stdout, "loaded_config_file: %s\n", resolvedConfigPath); err != nil {
+			log.Fatalf("dump config path: %v", err)
+		}
+
+		dump := maskedConfigForDump(cfg)
+		enc := yaml.NewEncoder(os.Stdout)
+		enc.SetIndent(2)
+		if err := enc.Encode(dump); err != nil {
+			log.Fatalf("dump config: %v", err)
+		}
+		if err := enc.Close(); err != nil {
+			log.Fatalf("dump config close: %v", err)
+		}
+		return
+	}
+
 	var tr translator.Translator
 	switch strings.ToLower(cfg.TranslationEngine) {
 	case "deepl":
 		if cfg.DeepLAPIKey == "" {
 			log.Fatal("DeepL API key is required for translation_engine=deepl.\n" +
-				"  Set via --api-key flag, WOWSCHAT_API_KEY env var, or deepl_api_key (api_key fallback) in config.yaml")
+				"  Set via --api-key flag, WOWSCHAT_API_KEY env var, or deepl_api_key in config.yaml")
 		}
 		tr = translator.NewDeepLTranslator(cfg.DeepLAPIKey, cfg.OutputFormat, cfg.Debug)
 	case "gpt":
@@ -241,6 +266,22 @@ func main() {
 			log.Fatalf("service run: %v", err)
 		}
 	}
+}
+
+func maskedConfigForDump(cfg *config.Config) config.Config {
+	masked := *cfg
+	masked.DeepLAPIKey = maskSecret(masked.DeepLAPIKey)
+	masked.OpenAIAPIKey = maskSecret(masked.OpenAIAPIKey)
+	masked.AnthropicAPIKey = maskSecret(masked.AnthropicAPIKey)
+	masked.GeminiAPIKey = maskSecret(masked.GeminiAPIKey)
+	return masked
+}
+
+func maskSecret(v string) string {
+	if strings.TrimSpace(v) == "" {
+		return ""
+	}
+	return "***"
 }
 
 func runServiceCommand(cmd string) {
