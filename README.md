@@ -84,6 +84,9 @@ deepl_api_key: "your-deepl-api-key"
 target_lang: "JA"
 output_format: "({DetectedSourceLanguage}) {TranslatedText}"
 trace_log_file: "logs/trace.jsonl"
+duplicate_burst_skip_enabled: true
+duplicate_burst_window_ms: 2000
+duplicate_normalize_whitespace: true
 ```
 
 `trace_log_file` is optional. If set, translator trace events are appended as JSON Lines.
@@ -92,18 +95,35 @@ Relative paths are resolved to:
 1. Linux: `~/.local/state/wowschat-translator`
 2. Windows: `%LOCALAPPDATA%\\wowschat-translator`
 
+Duplicate burst guard (recommended defaults):
+
+- `duplicate_burst_skip_enabled`: skip identical chat messages that arrive repeatedly in a short time window.
+- `duplicate_burst_window_ms`: duplicate detection window in milliseconds.
+- `duplicate_normalize_whitespace`: normalize whitespace before duplicate comparison.
+
+This guard runs before any translator call, so burst spam can be dropped without LLM/API cost.
+
 ### Environment variables
 
 ```
 WOWSCHAT_API_KEY=your-deepl-api-key
 WOWSCHAT_TARGET_LANG=JA
 WOWSCHAT_OUTPUT_FORMAT=({DetectedSourceLanguage}) {TranslatedText}
+WOWSCHAT_DUPLICATE_BURST_SKIP_ENABLED=true
+WOWSCHAT_DUPLICATE_BURST_WINDOW_MS=2000
+WOWSCHAT_DUPLICATE_NORMALIZE_WHITESPACE=true
 ```
 
 ### Command-line flags
 
 ```
 wowschat-translator.exe --api-key=your-deepl-api-key --target-lang=JA --output-format="({DetectedSourceLanguage}) {TranslatedText}"
+```
+
+Duplicate burst guard flags:
+
+```
+wowschat-translator.exe --duplicate-burst-skip-enabled=true --duplicate-burst-window-ms=2000 --duplicate-normalize-whitespace=true
 ```
 
 To inspect the effective loaded/resolved config and exit:

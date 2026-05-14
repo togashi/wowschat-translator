@@ -45,27 +45,30 @@ func (p *program) Stop(_ service.Service) error {
 
 func main() {
 	var (
-		configFile      = flag.String("config", "", "path to config file (default search: user config dir then current directory)")
-		apiKey          = flag.String("api-key", "", "DeepL API key")
-		targetLang      = flag.String("target-lang", "", "target language code (e.g. JA, EN-US)")
-		outputFmt       = flag.String("output-format", "", "translated output format (e.g. ({DetectedSourceLanguage}) {TranslatedText})")
-		engine          = flag.String("translation-engine", "", "translation engine: deepl, gpt, claude, or gemini")
-		openAIKey       = flag.String("openai-api-key", "", "OpenAI API key for GPT translation")
-		openAIModel     = flag.String("openai-model", "", "OpenAI model ID for GPT translation (e.g. gpt-5.4-mini)")
-		openAIPrompt    = flag.String("openai-prompt-file", "", "optional file path for GPT system prompt override")
-		openAITemp      = flag.String("openai-temperature", "", "OpenAI sampling temperature for GPT translation (e.g. 0.2)")
-		anthropicKey    = flag.String("anthropic-api-key", "", "Anthropic API key for Claude translation")
-		anthropicModel  = flag.String("anthropic-model", "", "Anthropic model ID for Claude translation (e.g. claude-haiku-4-5-20251001)")
-		anthropicPrompt = flag.String("anthropic-prompt-file", "", "optional file path for Claude system prompt override")
-		anthropicTemp   = flag.String("anthropic-temperature", "", "Anthropic sampling temperature for Claude translation (e.g. 0.2)")
-		geminiKey       = flag.String("gemini-api-key", "", "Google AI API key for Gemini translation")
-		geminiModel     = flag.String("gemini-model", "", "Gemini model ID for Gemini translation (e.g. gemini-2.5-flash)")
-		geminiPrompt    = flag.String("gemini-prompt-file", "", "optional file path for Gemini system prompt override")
-		geminiTemp      = flag.String("gemini-temperature", "", "Gemini sampling temperature for Gemini translation (e.g. 0.2)")
-		debug           = flag.String("debug", "", "enable verbose debug logging (true/false)")
-		traceLogFile    = flag.String("trace-log-file", "", "path to JSONL trace log file; if set, trace logging is enabled")
-		initConfig      = flag.Bool("init-config", false, "create default config.yaml and exit")
-		dumpConfig      = flag.Bool("dump-config", false, "dump loaded and resolved config as YAML (with masked API keys), then exit")
+		configFile                   = flag.String("config", "", "path to config file (default search: user config dir then current directory)")
+		apiKey                       = flag.String("api-key", "", "DeepL API key")
+		targetLang                   = flag.String("target-lang", "", "target language code (e.g. JA, EN-US)")
+		outputFmt                    = flag.String("output-format", "", "translated output format (e.g. ({DetectedSourceLanguage}) {TranslatedText})")
+		duplicateBurstSkipEnabled    = flag.String("duplicate-burst-skip-enabled", "", "skip identical messages received in a short burst (true/false)")
+		duplicateBurstWindowMs       = flag.String("duplicate-burst-window-ms", "", "time window in milliseconds for duplicate burst skipping (e.g. 2000)")
+		duplicateNormalizeWhitespace = flag.String("duplicate-normalize-whitespace", "", "normalize whitespace before duplicate comparison (true/false)")
+		engine                       = flag.String("translation-engine", "", "translation engine: deepl, gpt, claude, or gemini")
+		openAIKey                    = flag.String("openai-api-key", "", "OpenAI API key for GPT translation")
+		openAIModel                  = flag.String("openai-model", "", "OpenAI model ID for GPT translation (e.g. gpt-5.4-mini)")
+		openAIPrompt                 = flag.String("openai-prompt-file", "", "optional file path for GPT system prompt override")
+		openAITemp                   = flag.String("openai-temperature", "", "OpenAI sampling temperature for GPT translation (e.g. 0.2)")
+		anthropicKey                 = flag.String("anthropic-api-key", "", "Anthropic API key for Claude translation")
+		anthropicModel               = flag.String("anthropic-model", "", "Anthropic model ID for Claude translation (e.g. claude-haiku-4-5-20251001)")
+		anthropicPrompt              = flag.String("anthropic-prompt-file", "", "optional file path for Claude system prompt override")
+		anthropicTemp                = flag.String("anthropic-temperature", "", "Anthropic sampling temperature for Claude translation (e.g. 0.2)")
+		geminiKey                    = flag.String("gemini-api-key", "", "Google AI API key for Gemini translation")
+		geminiModel                  = flag.String("gemini-model", "", "Gemini model ID for Gemini translation (e.g. gemini-2.5-flash)")
+		geminiPrompt                 = flag.String("gemini-prompt-file", "", "optional file path for Gemini system prompt override")
+		geminiTemp                   = flag.String("gemini-temperature", "", "Gemini sampling temperature for Gemini translation (e.g. 0.2)")
+		debug                        = flag.String("debug", "", "enable verbose debug logging (true/false)")
+		traceLogFile                 = flag.String("trace-log-file", "", "path to JSONL trace log file; if set, trace logging is enabled")
+		initConfig                   = flag.Bool("init-config", false, "create default config.yaml and exit")
+		dumpConfig                   = flag.Bool("dump-config", false, "dump loaded and resolved config as YAML (with masked API keys), then exit")
 	)
 	flag.Parse()
 
@@ -115,6 +118,9 @@ func main() {
 		*geminiModel,
 		*geminiPrompt,
 		*geminiTemp,
+		*duplicateBurstSkipEnabled,
+		*duplicateBurstWindowMs,
+		*duplicateNormalizeWhitespace,
 		*debug,
 		*traceLogFile,
 	)
@@ -236,7 +242,15 @@ func main() {
 		}
 	}
 
-	srv := server.New(tr, cfg.TargetLang, cfg.ListenPort, cfg.EndpointPath)
+	srv := server.New(
+		tr,
+		cfg.TargetLang,
+		cfg.ListenPort,
+		cfg.EndpointPath,
+		cfg.DuplicateBurstSkipEnabled,
+		cfg.DuplicateBurstWindowMs,
+		cfg.DuplicateNormalizeWhitespace,
+	)
 	prg := &program{srv: srv}
 
 	svc, err := service.New(prg, svcConfig)

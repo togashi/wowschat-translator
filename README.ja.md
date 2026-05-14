@@ -83,6 +83,9 @@ deepl_api_key: "your-deepl-api-key"
 target_lang: "JA"
 output_format: "({DetectedSourceLanguage}) {TranslatedText}"
 trace_log_file: "logs/trace.jsonl"
+duplicate_burst_skip_enabled: true
+duplicate_burst_window_ms: 2000
+duplicate_normalize_whitespace: true
 ```
 
 `trace_log_file` は任意項目。設定した場合は translator のトレースイベントを JSON Lines で追記する。
@@ -91,18 +94,35 @@ trace_log_file: "logs/trace.jsonl"
 1. Linux: `~/.local/state/wowschat-translator`
 2. Windows: `%LOCALAPPDATA%\\wowschat-translator`
 
+重複バースト抑止（既定値推奨）:
+
+- `duplicate_burst_skip_enabled`: 同一メッセージの短時間連投をスキップする。
+- `duplicate_burst_window_ms`: 重複判定する時間窓（ミリ秒）。
+- `duplicate_normalize_whitespace`: 重複比較前に空白を正規化する。
+
+このガードは翻訳エンジン呼び出し前に動くため、連投スパムを LLM/API コストなしで落とせる。
+
 ### 環境変数
 
 ```
 WOWSCHAT_API_KEY=your-deepl-api-key
 WOWSCHAT_TARGET_LANG=JA
 WOWSCHAT_OUTPUT_FORMAT=({DetectedSourceLanguage}) {TranslatedText}
+WOWSCHAT_DUPLICATE_BURST_SKIP_ENABLED=true
+WOWSCHAT_DUPLICATE_BURST_WINDOW_MS=2000
+WOWSCHAT_DUPLICATE_NORMALIZE_WHITESPACE=true
 ```
 
 ### コマンドライン引数
 
 ```
 wowschat-translator.exe --api-key=your-deepl-api-key --target-lang=JA --output-format="({DetectedSourceLanguage}) {TranslatedText}"
+```
+
+重複バースト抑止の引数:
+
+```
+wowschat-translator.exe --duplicate-burst-skip-enabled=true --duplicate-burst-window-ms=2000 --duplicate-normalize-whitespace=true
 ```
 
 読み込み後・解決後の有効設定を確認して終了する場合:

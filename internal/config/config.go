@@ -13,29 +13,32 @@ import (
 )
 
 type Config struct {
-	DeepLAPIKey          string            `yaml:"deepl_api_key"`
-	TargetLang           string            `yaml:"target_lang"`
-	OutputFormat         string            `yaml:"output_format"`
-	Passthrough          []string          `yaml:"passthrough"`
-	Glossary             map[string]string `yaml:"glossary"`
-	Expand               map[string]string `yaml:"expand"`
-	ListenPort           int               `yaml:"listen_port"`
-	EndpointPath         string            `yaml:"endpoint_path"`
-	TranslationEngine    string            `yaml:"translation_engine"`
-	OpenAIAPIKey         string            `yaml:"openai_api_key"`
-	OpenAIModel          string            `yaml:"openai_model"`
-	OpenAIPromptFile     string            `yaml:"openai_prompt_file"`
-	OpenAITemperature    float64           `yaml:"openai_temperature"`
-	AnthropicAPIKey      string            `yaml:"anthropic_api_key"`
-	AnthropicModel       string            `yaml:"anthropic_model"`
-	AnthropicPromptFile  string            `yaml:"anthropic_prompt_file"`
-	AnthropicTemperature float64           `yaml:"anthropic_temperature"`
-	GeminiAPIKey         string            `yaml:"gemini_api_key"`
-	GeminiModel          string            `yaml:"gemini_model"`
-	GeminiPromptFile     string            `yaml:"gemini_prompt_file"`
-	GeminiTemperature    float64           `yaml:"gemini_temperature"`
-	Debug                bool              `yaml:"debug"`
-	TraceLogFile         string            `yaml:"trace_log_file"`
+	DeepLAPIKey                  string            `yaml:"deepl_api_key"`
+	TargetLang                   string            `yaml:"target_lang"`
+	OutputFormat                 string            `yaml:"output_format"`
+	DuplicateBurstSkipEnabled    bool              `yaml:"duplicate_burst_skip_enabled"`
+	DuplicateBurstWindowMs       int               `yaml:"duplicate_burst_window_ms"`
+	DuplicateNormalizeWhitespace bool              `yaml:"duplicate_normalize_whitespace"`
+	Passthrough                  []string          `yaml:"passthrough"`
+	Glossary                     map[string]string `yaml:"glossary"`
+	Expand                       map[string]string `yaml:"expand"`
+	ListenPort                   int               `yaml:"listen_port"`
+	EndpointPath                 string            `yaml:"endpoint_path"`
+	TranslationEngine            string            `yaml:"translation_engine"`
+	OpenAIAPIKey                 string            `yaml:"openai_api_key"`
+	OpenAIModel                  string            `yaml:"openai_model"`
+	OpenAIPromptFile             string            `yaml:"openai_prompt_file"`
+	OpenAITemperature            float64           `yaml:"openai_temperature"`
+	AnthropicAPIKey              string            `yaml:"anthropic_api_key"`
+	AnthropicModel               string            `yaml:"anthropic_model"`
+	AnthropicPromptFile          string            `yaml:"anthropic_prompt_file"`
+	AnthropicTemperature         float64           `yaml:"anthropic_temperature"`
+	GeminiAPIKey                 string            `yaml:"gemini_api_key"`
+	GeminiModel                  string            `yaml:"gemini_model"`
+	GeminiPromptFile             string            `yaml:"gemini_prompt_file"`
+	GeminiTemperature            float64           `yaml:"gemini_temperature"`
+	Debug                        bool              `yaml:"debug"`
+	TraceLogFile                 string            `yaml:"trace_log_file"`
 }
 
 //go:embed default_config.yaml
@@ -107,21 +110,27 @@ func Load(
 	geminiModel,
 	geminiPromptFile,
 	geminiTemperature,
+	duplicateBurstSkipEnabled,
+	duplicateBurstWindowMs,
+	duplicateNormalizeWhitespace,
 	debug,
 	traceLogFile string,
 ) (*Config, error) {
 	cfg := &Config{
-		TargetLang:           "JA",
-		OutputFormat:         "({DetectedSourceLanguage}) {TranslatedText}",
-		TranslationEngine:    "deepl",
-		ListenPort:           5000,
-		EndpointPath:         "/wowschat/",
-		OpenAIModel:          "gpt-5.4-mini",
-		OpenAITemperature:    0.2,
-		AnthropicModel:       "claude-haiku-4-5-20251001",
-		AnthropicTemperature: 0.2,
-		GeminiModel:          "gemini-2.5-flash",
-		GeminiTemperature:    0.2,
+		TargetLang:                   "JA",
+		OutputFormat:                 "({DetectedSourceLanguage}) {TranslatedText}",
+		DuplicateBurstSkipEnabled:    true,
+		DuplicateBurstWindowMs:       2000,
+		DuplicateNormalizeWhitespace: true,
+		TranslationEngine:            "deepl",
+		ListenPort:                   5000,
+		EndpointPath:                 "/wowschat/",
+		OpenAIModel:                  "gpt-5.4-mini",
+		OpenAITemperature:            0.2,
+		AnthropicModel:               "claude-haiku-4-5-20251001",
+		AnthropicTemperature:         0.2,
+		GeminiModel:                  "gemini-2.5-flash",
+		GeminiTemperature:            0.2,
 	}
 
 	path := resolveConfigPath(configFile)
@@ -142,6 +151,30 @@ func Load(
 	}
 	if v := os.Getenv("WOWSCHAT_OUTPUT_FORMAT"); v != "" {
 		cfg.OutputFormat = v
+	}
+	if v := os.Getenv("WOWSCHAT_DUPLICATE_BURST_SKIP_ENABLED"); v != "" {
+		enabled, err := strconv.ParseBool(v)
+		if err != nil {
+			return nil, fmt.Errorf("invalid WOWSCHAT_DUPLICATE_BURST_SKIP_ENABLED %q: %w", v, err)
+		}
+		cfg.DuplicateBurstSkipEnabled = enabled
+	}
+	if v := os.Getenv("WOWSCHAT_DUPLICATE_BURST_WINDOW_MS"); v != "" {
+		windowMs, err := strconv.Atoi(v)
+		if err != nil {
+			return nil, fmt.Errorf("invalid WOWSCHAT_DUPLICATE_BURST_WINDOW_MS %q: %w", v, err)
+		}
+		if windowMs < 0 {
+			return nil, fmt.Errorf("invalid WOWSCHAT_DUPLICATE_BURST_WINDOW_MS %q: must be >= 0", v)
+		}
+		cfg.DuplicateBurstWindowMs = windowMs
+	}
+	if v := os.Getenv("WOWSCHAT_DUPLICATE_NORMALIZE_WHITESPACE"); v != "" {
+		normalize, err := strconv.ParseBool(v)
+		if err != nil {
+			return nil, fmt.Errorf("invalid WOWSCHAT_DUPLICATE_NORMALIZE_WHITESPACE %q: %w", v, err)
+		}
+		cfg.DuplicateNormalizeWhitespace = normalize
 	}
 	if v := os.Getenv("WOWSCHAT_TRANSLATION_ENGINE"); v != "" {
 		cfg.TranslationEngine = v
@@ -213,6 +246,30 @@ func Load(
 	}
 	if outputFormat != "" {
 		cfg.OutputFormat = outputFormat
+	}
+	if duplicateBurstSkipEnabled != "" {
+		enabled, err := strconv.ParseBool(duplicateBurstSkipEnabled)
+		if err != nil {
+			return nil, fmt.Errorf("invalid duplicate_burst_skip_enabled %q: %w", duplicateBurstSkipEnabled, err)
+		}
+		cfg.DuplicateBurstSkipEnabled = enabled
+	}
+	if duplicateBurstWindowMs != "" {
+		windowMs, err := strconv.Atoi(duplicateBurstWindowMs)
+		if err != nil {
+			return nil, fmt.Errorf("invalid duplicate_burst_window_ms %q: %w", duplicateBurstWindowMs, err)
+		}
+		if windowMs < 0 {
+			return nil, fmt.Errorf("invalid duplicate_burst_window_ms %q: must be >= 0", duplicateBurstWindowMs)
+		}
+		cfg.DuplicateBurstWindowMs = windowMs
+	}
+	if duplicateNormalizeWhitespace != "" {
+		normalize, err := strconv.ParseBool(duplicateNormalizeWhitespace)
+		if err != nil {
+			return nil, fmt.Errorf("invalid duplicate_normalize_whitespace %q: %w", duplicateNormalizeWhitespace, err)
+		}
+		cfg.DuplicateNormalizeWhitespace = normalize
 	}
 	if translationEngine != "" {
 		cfg.TranslationEngine = translationEngine

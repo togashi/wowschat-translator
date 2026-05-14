@@ -9,6 +9,9 @@ deepl_api_key: "your-deepl-api-key-here"
 # gemini_model: "gemini-2.5-flash"
 # trace_log_file: "logs/trace.jsonl" # relative path base: Linux ~/.local/state/wowschat-translator, Windows %LOCALAPPDATA%\\wowschat-translator
 # output_format: "({DetectedSourceLanguage}) {TranslatedText}"
+duplicate_burst_skip_enabled: true
+duplicate_burst_window_ms: 2000
+duplicate_normalize_whitespace: true
 passthrough:
   - gg
   - thx
