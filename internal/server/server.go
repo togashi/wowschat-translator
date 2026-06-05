@@ -74,9 +74,17 @@ func (s *Server) Shutdown(ctx context.Context) error {
 	return s.http.Shutdown(ctx)
 }
 
+const maxInputLen = 500
+
 func (s *Server) handle(w http.ResponseWriter, r *http.Request) {
 	text := r.URL.Query().Get("text")
 	if text == "" {
+		return
+	}
+
+	if len([]rune(text)) > maxInputLen {
+		log.Printf("skip: input too long (%d chars)", len([]rune(text)))
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		return
 	}
 

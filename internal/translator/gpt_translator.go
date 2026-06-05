@@ -117,6 +117,7 @@ func (t *GPTTranslator) Translate(text, targetLang string) (string, error) {
 	t.debugf("translate start model=%s temp=%.3f target=%s text_len=%d", t.model, t.temperature, targetLang, len(text))
 	t.trace("gpt", "input", text, nil)
 
+	text = sanitizePTTokens(text)
 	expanded := applyExpand(text, t.expand)
 	if expanded != text {
 		t.debugf("expand applied: %q -> %q", text, expanded)
@@ -142,12 +143,8 @@ func (t *GPTTranslator) Translate(text, targetLang string) (string, error) {
 				Content: t.buildSystemPrompt(),
 			},
 			{
-				Role: "user",
-				Content: fmt.Sprintf(
-					"Target language: %s\nText: %s",
-					targetLang,
-					maskedText,
-				),
+				Role:    "user",
+				Content: buildUserMessage(targetLang, maskedText),
 			},
 		},
 		Temperature: t.temperature,

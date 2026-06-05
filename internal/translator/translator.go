@@ -7,6 +7,8 @@ import (
 	"strings"
 )
 
+var ptTokenRe = regexp.MustCompile(`__PT\d+__`)
+
 type Translator interface {
 	Translate(text, targetLang string) (string, error)
 }
@@ -26,6 +28,14 @@ func formatOutput(outputFormat, detectedSourceLanguage, targetLanguage, sourceTe
 	return formatted
 }
 
+func sanitizePTTokens(text string) string {
+	return ptTokenRe.ReplaceAllString(text, "")
+}
+
+func buildUserMessage(targetLang, maskedText string) string {
+	return fmt.Sprintf("Target language: %s\n<chat_message>\n%s\n</chat_message>", targetLang, maskedText)
+}
+
 func applyExpand(text string, expand map[string]string) string {
 	if len(expand) == 0 {
 		return text
@@ -40,19 +50,27 @@ func applyExpand(text string, expand map[string]string) string {
 	return text
 }
 
+func stripMarkdownFence(s string) string {
+	s = strings.TrimSpace(s)
+	if !strings.HasPrefix(s, "```") {
+		return s
+	}
+	newline := strings.IndexByte(s, '\n')
+	if newline < 0 {
+		return s
+	}
+	s = s[newline+1:]
+	if idx := strings.LastIndex(s, "```"); idx >= 0 {
+		s = strings.TrimSpace(s[:idx])
+	}
+	return s
+}
+
 func parseTranslationResult(content string) (*translationResult, error) {
+	content = stripMarkdownFence(content)
 	var out translationResult
-	if err := json.Unmarshal([]byte(content), &out); err == nil {
-		return &out, nil
+	if err := json.Unmarshal([]byte(content), &out); err != nil {
+		return nil, fmt.Errorf("translation response is not valid JSON: %q", content)
 	}
-
-	start := strings.Index(content, "{")
-	end := strings.LastIndex(content, "}")
-	if start >= 0 && end > start {
-		if err := json.Unmarshal([]byte(content[start:end+1]), &out); err == nil {
-			return &out, nil
-		}
-	}
-
-	return nil, fmt.Errorf("translation response is not valid JSON: %q", content)
+	return &out, nil
 }

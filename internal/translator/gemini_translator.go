@@ -134,6 +134,7 @@ func (t *GeminiTranslator) Translate(text, targetLang string) (string, error) {
 	t.debugf("translate start model=%s temp=%.3f target=%s text_len=%d", t.model, t.temperature, targetLang, len(text))
 	t.trace("gemini", "input", text, nil)
 
+	text = sanitizePTTokens(text)
 	expanded := applyExpand(text, t.expand)
 	if expanded != text {
 		t.debugf("expand applied: %q -> %q", text, expanded)
@@ -160,11 +161,7 @@ func (t *GeminiTranslator) Translate(text, targetLang string) (string, error) {
 			{
 				Role: "user",
 				Parts: []geminiPart{{
-					Text: fmt.Sprintf(
-						"Target language: %s\nText: %s",
-						targetLang,
-						maskedText,
-					),
+					Text: buildUserMessage(targetLang, maskedText),
 				}},
 			},
 		},
