@@ -41,6 +41,16 @@ This file captures repository-specific guidance for GPT-style coding agents.
 - If external prompt is active and placeholders are absent, passthrough/glossary are not auto-appended.
 - If embedded default prompt is used, passthrough/glossary are auto-appended for compatibility.
 
+## Response Format (GPT / Claude / Gemini)
+
+- Each engine requests native structured JSON output at the request level so responses are constrained to the translation schema (`text`, `source_lang`, `translation_note`; all required):
+  - GPT: `text.format` = `json_schema` with `strict: true` (OpenAI Responses API)
+  - Claude: `output_config.format` = `json_schema` (Anthropic Messages API; GA, no beta header)
+  - Gemini: `responseMimeType: application/json` + `responseSchema` (with `propertyOrdering`)
+- Shared schema builders live in internal/translator/translator.go (`strictTranslationSchema` for GPT/Claude, `geminiTranslationSchema` for Gemini).
+- Requires a model that supports structured outputs (defaults do: gpt-5.4-mini, claude-haiku-4-5, gemini-2.5-flash). An unsupported configured model may reject the request.
+- `parseTranslationResult` still strips markdown fences and recovers fields from truncated JSON as a safety net (e.g. when the response hits its output-token limit).
+
 ## Passthrough/Glossary/Expand Notes
 
 - Passthrough rule syntax:

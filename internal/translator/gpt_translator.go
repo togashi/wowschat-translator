@@ -37,9 +37,21 @@ type GPTTranslator struct {
 }
 
 type openAIResponsesRequest struct {
-	Model       string       `json:"model"`
-	Input       []gptMessage `json:"input"`
-	Temperature float64      `json:"temperature"`
+	Model       string          `json:"model"`
+	Input       []gptMessage    `json:"input"`
+	Temperature float64         `json:"temperature"`
+	Text        *openAITextSpec `json:"text,omitempty"`
+}
+
+type openAITextSpec struct {
+	Format openAITextFormat `json:"format"`
+}
+
+type openAITextFormat struct {
+	Type   string         `json:"type"`
+	Name   string         `json:"name"`
+	Strict bool           `json:"strict"`
+	Schema map[string]any `json:"schema"`
 }
 
 type gptMessage struct {
@@ -148,6 +160,14 @@ func (t *GPTTranslator) Translate(text, targetLang string) (string, error) {
 			},
 		},
 		Temperature: t.temperature,
+		Text: &openAITextSpec{
+			Format: openAITextFormat{
+				Type:   "json_schema",
+				Name:   "translation",
+				Strict: true,
+				Schema: strictTranslationSchema(),
+			},
+		},
 	}
 	body, err := json.Marshal(reqBody)
 	if err != nil {

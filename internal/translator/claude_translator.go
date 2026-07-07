@@ -36,11 +36,21 @@ type ClaudeTranslator struct {
 }
 
 type claudeMessagesRequest struct {
-	Model       string          `json:"model"`
-	MaxTokens   int             `json:"max_tokens"`
-	System      string          `json:"system"`
-	Messages    []claudeMessage `json:"messages"`
-	Temperature float64         `json:"temperature"`
+	Model        string              `json:"model"`
+	MaxTokens    int                 `json:"max_tokens"`
+	System       string              `json:"system"`
+	Messages     []claudeMessage     `json:"messages"`
+	Temperature  float64             `json:"temperature"`
+	OutputConfig *claudeOutputConfig `json:"output_config,omitempty"`
+}
+
+type claudeOutputConfig struct {
+	Format claudeOutputFormat `json:"format"`
+}
+
+type claudeOutputFormat struct {
+	Type   string         `json:"type"`
+	Schema map[string]any `json:"schema"`
 }
 
 type claudeMessage struct {
@@ -141,6 +151,12 @@ func (t *ClaudeTranslator) Translate(text, targetLang string) (string, error) {
 			},
 		},
 		Temperature: t.temperature,
+		OutputConfig: &claudeOutputConfig{
+			Format: claudeOutputFormat{
+				Type:   "json_schema",
+				Schema: strictTranslationSchema(),
+			},
+		},
 	}
 	body, err := json.Marshal(reqBody)
 	if err != nil {

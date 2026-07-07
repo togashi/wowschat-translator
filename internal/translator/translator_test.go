@@ -1,6 +1,33 @@
 package translator
 
-import "testing"
+import (
+	"encoding/json"
+	"testing"
+)
+
+func TestStrictTranslationSchema(t *testing.T) {
+	data, err := json.Marshal(strictTranslationSchema())
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	got := string(data)
+	want := `{"additionalProperties":false,"properties":{"source_lang":{"type":"string"},"text":{"type":"string"},"translation_note":{"type":"string"}},"required":["text","source_lang","translation_note"],"type":"object"}`
+	if got != want {
+		t.Errorf("strict schema = %s, want %s", got, want)
+	}
+}
+
+func TestGeminiTranslationSchema(t *testing.T) {
+	data, err := json.Marshal(geminiTranslationSchema())
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	got := string(data)
+	want := `{"properties":{"source_lang":{"type":"string"},"text":{"type":"string"},"translation_note":{"type":"string"}},"propertyOrdering":["text","source_lang","translation_note"],"required":["text","source_lang","translation_note"],"type":"object"}`
+	if got != want {
+		t.Errorf("gemini schema = %s, want %s", got, want)
+	}
+}
 
 func TestParseTranslationResult_Valid(t *testing.T) {
 	res, err := parseTranslationResult(`{"text":"キャップAへ","source_lang":"en","translation_note":"cmd"}`)

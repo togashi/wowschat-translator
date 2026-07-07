@@ -54,6 +54,7 @@ type geminiGenerationConfig struct {
 	Temperature      float64               `json:"temperature"`
 	MaxOutputTokens  int                   `json:"maxOutputTokens"`
 	ResponseMimeType string                `json:"responseMimeType,omitempty"`
+	ResponseSchema   map[string]any        `json:"responseSchema,omitempty"`
 	ThinkingConfig   *geminiThinkingConfig `json:"thinkingConfig,omitempty"`
 }
 
@@ -169,6 +170,7 @@ func (t *GeminiTranslator) Translate(text, targetLang string) (string, error) {
 			Temperature:      t.temperature,
 			MaxOutputTokens:  512,
 			ResponseMimeType: "application/json",
+			ResponseSchema:   geminiTranslationSchema(),
 			ThinkingConfig:   &geminiThinkingConfig{ThinkingBudget: 0},
 		},
 	}

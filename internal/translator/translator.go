@@ -68,6 +68,43 @@ func stripMarkdownFence(s string) string {
 	return s
 }
 
+// translationSchemaProperties describes the fields of the translation result
+// object. It is shared by every engine's native structured-output request so
+// the model is constrained to emit valid, parseable JSON.
+func translationSchemaProperties() map[string]any {
+	return map[string]any{
+		"text":             map[string]any{"type": "string"},
+		"source_lang":      map[string]any{"type": "string"},
+		"translation_note": map[string]any{"type": "string"},
+	}
+}
+
+// translationSchemaFields is the ordered list of result fields, used for both
+// the "required" set and Gemini's property ordering.
+var translationSchemaFields = []string{"text", "source_lang", "translation_note"}
+
+// strictTranslationSchema builds a JSON Schema for OpenAI and Anthropic
+// structured outputs: every field required, no extra properties.
+func strictTranslationSchema() map[string]any {
+	return map[string]any{
+		"type":                 "object",
+		"properties":           translationSchemaProperties(),
+		"required":             translationSchemaFields,
+		"additionalProperties": false,
+	}
+}
+
+// geminiTranslationSchema builds the response schema for Gemini, whose OpenAPI
+// subset uses propertyOrdering and does not accept additionalProperties.
+func geminiTranslationSchema() map[string]any {
+	return map[string]any{
+		"type":             "object",
+		"properties":       translationSchemaProperties(),
+		"required":         translationSchemaFields,
+		"propertyOrdering": translationSchemaFields,
+	}
+}
+
 func parseTranslationResult(content string) (*translationResult, error) {
 	content = stripMarkdownFence(content)
 	var out translationResult
