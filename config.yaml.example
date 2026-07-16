@@ -3,10 +3,13 @@ target_lang: "JA"
 deepl_api_key: "your-deepl-api-key-here"
 # openai_api_key: ""
 # openai_model: "gpt-5.4-mini"
+# openai_temperature: 0.2 # set a negative value (e.g. -1) to omit temperature for models that reject it
 # anthropic_api_key: ""
 # anthropic_model: "claude-haiku-4-5-20251001"
+# anthropic_temperature: 0.2 # negative value omits temperature from the request
 # gemini_api_key: ""
 # gemini_model: "gemini-2.5-flash"
+# gemini_temperature: 0.2 # negative value omits temperature from the request
 # trace_log_file: "logs/trace.jsonl" # relative path base: Linux ~/.local/state/wowschat-translator, Windows %LOCALAPPDATA%\\wowschat-translator
 # output_format: "({DetectedSourceLanguage}) {TranslatedText}"
 duplicate_burst_skip_enabled: true

@@ -40,7 +40,7 @@ type claudeMessagesRequest struct {
 	MaxTokens    int                 `json:"max_tokens"`
 	System       string              `json:"system"`
 	Messages     []claudeMessage     `json:"messages"`
-	Temperature  float64             `json:"temperature"`
+	Temperature  *float64            `json:"temperature,omitempty"`
 	OutputConfig *claudeOutputConfig `json:"output_config,omitempty"`
 }
 
@@ -150,7 +150,7 @@ func (t *ClaudeTranslator) Translate(text, targetLang string) (string, error) {
 				Content: buildUserMessage(targetLang, maskedText),
 			},
 		},
-		Temperature: t.temperature,
+		Temperature: temperatureField(t.temperature),
 		OutputConfig: &claudeOutputConfig{
 			Format: claudeOutputFormat{
 				Type:   "json_schema",

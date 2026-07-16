@@ -183,7 +183,7 @@ Config file example:
 translation_engine: "gpt"
 openai_api_key: "your-openai-api-key"
 openai_model: "gpt-5.4-mini"
-openai_temperature: 0.2
+openai_temperature: 0.2 # set a negative value (e.g. -1) to omit temperature for models that reject it
 openai_prompt_file: "prompts/my_gpt_system_prompt.txt" # optional
 
 passthrough:
@@ -241,7 +241,7 @@ Config file example:
 translation_engine: "claude"
 anthropic_api_key: "your-anthropic-api-key"
 anthropic_model: "claude-haiku-4-5-20251001"
-anthropic_temperature: 0.2
+anthropic_temperature: 0.2 # set a negative value (e.g. -1) to omit temperature for models that reject it
 anthropic_prompt_file: "prompts/my_claude_system_prompt.txt" # optional
 
 passthrough:
@@ -290,7 +290,7 @@ Config file example:
 translation_engine: "gemini"
 gemini_api_key: "your-gemini-api-key"
 gemini_model: "gemini-2.5-flash"
-gemini_temperature: 0.2
+gemini_temperature: 0.2 # set a negative value (e.g. -1) to omit temperature for models that reject it
 gemini_prompt_file: "prompts/my_gemini_system_prompt.txt" # optional
 
 passthrough:

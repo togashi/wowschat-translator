@@ -30,6 +30,7 @@ This file captures repository-specific guidance for GPT-style coding agents.
 - Claude config keys: anthropic_api_key, anthropic_model, anthropic_prompt_file, anthropic_temperature
 - Gemini config keys: gemini_api_key, gemini_model, gemini_prompt_file, gemini_temperature
 - Supported engines: deepl, gpt, claude, gemini
+- Temperature omit sentinel: a negative `*_temperature` value (e.g. `-1`) omits `temperature` from the LLM request entirely (for models that reject a temperature). Implemented via `temperatureField` in internal/translator/translator.go, which returns nil for negative values; the request structs use `*float64` + `omitempty`. Constructor defaulting only fills `0` -> `0.2`, so negatives pass through untouched.
 
 ## Prompt Behavior (GPT / Claude / Gemini)
 

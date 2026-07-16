@@ -2,6 +2,7 @@ package translator
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 )
 
@@ -27,6 +28,43 @@ func TestGeminiTranslationSchema(t *testing.T) {
 	if got != want {
 		t.Errorf("gemini schema = %s, want %s", got, want)
 	}
+}
+
+func TestTemperatureField(t *testing.T) {
+	if got := temperatureField(-1); got != nil {
+		t.Errorf("negative temperature should be nil, got %v", *got)
+	}
+	if got := temperatureField(-0.001); got != nil {
+		t.Errorf("any negative temperature should be nil, got %v", *got)
+	}
+	if got := temperatureField(0); got == nil || *got != 0 {
+		t.Errorf("zero temperature should serialize as 0, got %v", got)
+	}
+	if got := temperatureField(0.2); got == nil || *got != 0.2 {
+		t.Errorf("positive temperature should serialize as 0.2, got %v", got)
+	}
+}
+
+func TestGPTRequestOmitsNegativeTemperature(t *testing.T) {
+	withTemp, err := json.Marshal(openAIResponsesRequest{Model: "m", Temperature: temperatureField(0.2)})
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	if !containsJSONKey(string(withTemp), "temperature") {
+		t.Errorf("expected temperature present, got %s", withTemp)
+	}
+
+	omitted, err := json.Marshal(openAIResponsesRequest{Model: "m", Temperature: temperatureField(-1)})
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	if containsJSONKey(string(omitted), "temperature") {
+		t.Errorf("expected temperature omitted, got %s", omitted)
+	}
+}
+
+func containsJSONKey(payload, key string) bool {
+	return json.Valid([]byte(payload)) && strings.Contains(payload, `"`+key+`":`)
 }
 
 func TestParseTranslationResult_Valid(t *testing.T) {

@@ -181,7 +181,7 @@ output_format: "({DetectedSourceLanguage}) {SourceText}\n({TargetLanguage}) {Tra
 translation_engine: "gpt"
 openai_api_key: "your-openai-api-key"
 openai_model: "gpt-5.4-mini"
-openai_temperature: 0.2
+openai_temperature: 0.2 # 負の値(例: -1)を指定すると temperature を送信しない（非対応モデル向け）
 openai_prompt_file: "prompts/my_gpt_system_prompt.txt" # 任意
 
 passthrough:
@@ -238,7 +238,7 @@ wowschat-translator.exe --translation-engine=gpt --openai-api-key=your-openai-ap
 translation_engine: "claude"
 anthropic_api_key: "your-anthropic-api-key"
 anthropic_model: "claude-haiku-4-5-20251001"
-anthropic_temperature: 0.2
+anthropic_temperature: 0.2 # 負の値(例: -1)を指定すると temperature を送信しない（非対応モデル向け）
 anthropic_prompt_file: "prompts/my_claude_system_prompt.txt" # 任意
 
 passthrough:
@@ -287,7 +287,7 @@ wowschat-translator.exe --translation-engine=claude --anthropic-api-key=your-ant
 translation_engine: "gemini"
 gemini_api_key: "your-gemini-api-key"
 gemini_model: "gemini-2.5-flash"
-gemini_temperature: 0.2
+gemini_temperature: 0.2 # 負の値(例: -1)を指定すると temperature を送信しない（非対応モデル向け）
 gemini_prompt_file: "prompts/my_gemini_system_prompt.txt" # 任意
 
 passthrough:

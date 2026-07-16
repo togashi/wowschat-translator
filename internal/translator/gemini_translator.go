@@ -51,7 +51,7 @@ type geminiPart struct {
 }
 
 type geminiGenerationConfig struct {
-	Temperature      float64               `json:"temperature"`
+	Temperature      *float64              `json:"temperature,omitempty"`
 	MaxOutputTokens  int                   `json:"maxOutputTokens"`
 	ResponseMimeType string                `json:"responseMimeType,omitempty"`
 	ResponseSchema   map[string]any        `json:"responseSchema,omitempty"`
@@ -167,7 +167,7 @@ func (t *GeminiTranslator) Translate(text, targetLang string) (string, error) {
 			},
 		},
 		GenerationConfig: geminiGenerationConfig{
-			Temperature:      t.temperature,
+			Temperature:      temperatureField(t.temperature),
 			MaxOutputTokens:  512,
 			ResponseMimeType: "application/json",
 			ResponseSchema:   geminiTranslationSchema(),

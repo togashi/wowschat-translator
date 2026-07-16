@@ -34,6 +34,18 @@ func sanitizePTTokens(text string) string {
 	return ptTokenRe.ReplaceAllString(text, "")
 }
 
+// temperatureField converts a configured temperature into a pointer suitable
+// for JSON serialization. A negative value is a sentinel meaning "do not send
+// temperature" (returns nil so the field is omitted), which lets callers target
+// models that reject an explicit temperature.
+func temperatureField(temperature float64) *float64 {
+	if temperature < 0 {
+		return nil
+	}
+	value := temperature
+	return &value
+}
+
 func buildUserMessage(targetLang, maskedText string) string {
 	return fmt.Sprintf("Target language: %s\n<chat_message>\n%s\n</chat_message>", targetLang, maskedText)
 }

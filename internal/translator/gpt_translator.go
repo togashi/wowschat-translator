@@ -39,7 +39,7 @@ type GPTTranslator struct {
 type openAIResponsesRequest struct {
 	Model       string          `json:"model"`
 	Input       []gptMessage    `json:"input"`
-	Temperature float64         `json:"temperature"`
+	Temperature *float64        `json:"temperature,omitempty"`
 	Text        *openAITextSpec `json:"text,omitempty"`
 }
 
@@ -159,7 +159,7 @@ func (t *GPTTranslator) Translate(text, targetLang string) (string, error) {
 				Content: buildUserMessage(targetLang, maskedText),
 			},
 		},
-		Temperature: t.temperature,
+		Temperature: temperatureField(t.temperature),
 		Text: &openAITextSpec{
 			Format: openAITextFormat{
 				Type:   "json_schema",
